@@ -273,6 +273,8 @@ void separate_tags_per_channels(long long* tags, long long numtags, vector<doubl
 }
 
 
+
+#if CCALGO==STL_SETINTERSECT
 /********************************************************************************
 *** find coincidences - set inersect
 */
@@ -323,10 +325,11 @@ vector<cc_point> find_coincidences(vector<double>* ttags, vector<double>* htags,
     return result;         
 }
 
+#elif CCALGO==STL_SETINTERSECT_TRIGGER
 /********************************************************************************
 *** find coincidences with trigger - set inersect - keep only coincidences where fpga signal is present too
 */
-vector<cc_point> find_coincidences_with_trigger(vector<double>* ttags, vector<double>* htags, vector<double>* vtags, const vector<double>* offsets, vector<double>* ftags) {
+vector<cc_point> find_coincidences(vector<double>* ttags, vector<double>* htags, vector<double>* vtags, const vector<double>* offsets, vector<double>* ftags) {
     const uint offset_len = offsets->size();
     vector<cc_point> result(offset_len);
     
@@ -371,11 +374,11 @@ vector<cc_point> find_coincidences_with_trigger(vector<double>* ttags, vector<do
     return result;         
 }
 
-
+#elif CCALGO==BST
 //********************************************************************************
 //*** find coincidences - custom binary search
 //*/
-vector<cc_point> find_coincidences2(vector<double>* ttags, vector<double>* htags, vector<double>* vtags, const vector<double>* offsets) {
+vector<cc_point> find_coincidences(vector<double>* ttags, vector<double>* htags, vector<double>* vtags, const vector<double>* offsets) {
     vector<cc_point> result(offsets->size());
     
     #pragma omp parallel for
@@ -453,11 +456,11 @@ vector<cc_point> find_coincidences2(vector<double>* ttags, vector<double>* htags
     return result;
 }
 
-
+#elif CCALGO==UNORDERED_SET
 //********************************************************************************
 //*** find coincidences - unordered set
 //*/
-vector<cc_point> find_coincidences3(vector<double>* ttags, vector<double>* htags, vector<double>* vtags, const vector<double>* offsets) {
+vector<cc_point> find_coincidences(vector<double>* ttags, vector<double>* htags, vector<double>* vtags, const vector<double>* offsets) {
     vector<cc_point> result(offsets->size());
     
     std::unordered_set<double> tmpttags(ttags->begin(), ttags->end());
@@ -507,10 +510,11 @@ vector<cc_point> find_coincidences3(vector<double>* ttags, vector<double>* htags
     return result;
 }
 
+#elif CCALGO==LINEAR_SEARCH
 //********************************************************************************
 //*** find coincidences - linear search
 //*/
-vector<cc_point> find_coincidences4(vector<double>* ttags, vector<double>* htags, vector<double>* vtags, const vector<double>* offsets) {
+vector<cc_point> find_coincidences(vector<double>* ttags, vector<double>* htags, vector<double>* vtags, const vector<double>* offsets) {
     vector<cc_point> result(offsets->size());
     
     #pragma omp parallel for
@@ -577,11 +581,11 @@ vector<cc_point> find_coincidences4(vector<double>* ttags, vector<double>* htags
     return result;
 }
 
-
+#elif CCALGO==STL_BST
 /********************************************************************************
 *** find coincidences - STL BST
 */
-vector<cc_point> find_coincidences5(vector<double>* ttags, vector<double>* htags, vector<double>* vtags, const vector<double>* offsets) {
+vector<cc_point> find_coincidences(vector<double>* ttags, vector<double>* htags, vector<double>* vtags, const vector<double>* offsets) {
     const uint offset_len = offsets->size();
     vector<cc_point> result(offset_len);
     
@@ -624,6 +628,7 @@ vector<cc_point> find_coincidences5(vector<double>* ttags, vector<double>* htags
     }
     return result;
 }
+#endif
 
 /********************************************************************************
 *** separate tag vectors
