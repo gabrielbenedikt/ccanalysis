@@ -1,3 +1,0 @@
-/home/psiminus/Nextcloud/projects/rewinding/data/performance/cpp/release/CMakeFiles/rebuild_cache.dir
-/home/psiminus/Nextcloud/projects/rewinding/data/performance/cpp/release/CMakeFiles/edit_cache.dir
-/home/psiminus/Nextcloud/projects/rewinding/data/performance/cpp/release/CMakeFiles/ccanalysis.dir
