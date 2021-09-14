@@ -62,3 +62,8 @@ release/
 debug/
 inttime/
 config/
+pgo/
+perf.data*
+callgrind*
+.cmake/
+vec.opt
