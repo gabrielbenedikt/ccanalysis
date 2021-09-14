@@ -1,0 +1,2 @@
+valgrind --tool=callgrind ./ccanalysis
+./gprof2dot.py -f callgrind callgrind.out.x | dot -Tsvg -o output.svg

@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package ccset;
+
+message ccset_data {
+    repeated double offsets = 1;
+    repeated int64 cc_h = 2;
+    repeated int64 cc_v = 3;
+    message darr {
+        repeated double arr = 1;
+    }
+    repeated darr cc_h_tags = 4;
+    repeated darr cc_v_tags = 5;
+    double meastime = 6;
+    int64 num_trigger_tags = 7;
+    int64 num_fpga_tags = 8;
+}
