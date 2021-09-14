@@ -12,7 +12,7 @@ int main(void)
     vector<string> newtagfiles = get_new_tagfiles();
     
     cout << "new files: "<< endl;
-    for (auto e: newtagfiles) {         //////     for (const auto &e: newtagfiles) {
+    for (const auto &e: newtagfiles) {
         cout << e << endl;
     }
     
@@ -40,14 +40,7 @@ int main(void)
         vector<double> cnt_fpga = {};
         separate_tags_per_channels(data, data_len, cnt_tr, cnt_h, cnt_v, cnt_fpga);
         
-        
-        //round trigger tags
-        //for(auto& tt : cnt_tr) {
-        //    tt=round(tt*10)/10;
-        //}   
-        //std::ranges::for_each(cnt_tr.begin(), cnt_tr.end(), [](double tt) -> double { return round(tt*10)/10; });
         std::ranges::for_each(cnt_tr.begin(), cnt_tr.end(), [](double &tt) { tt=round(tt*10)/10; });
-        //std::for_each(std::execution::par, cnt_tr.begin(), cnt_tr.end(), [](double &tt) { tt=round(tt*10)/10; });
 
         /*
         * find coincidences
@@ -99,7 +92,7 @@ int main(void)
 /********************************************************************************
 *** read hdf file
 */
-long long* readHDFfile(string fn, string datasetPath, long long& out_data_len)
+long long* readHDFfile(const string fn, const string datasetPath, long long& out_data_len)
 {
     
     // Open HDF5 file handle, read only
@@ -173,7 +166,7 @@ long long* readHDFfile(string fn, string datasetPath, long long& out_data_len)
 /********************************************************************************
 *** separate tag vectors
 */
-void separate_tags_per_channels(long long* tags, long long numtags, vector<double>& cnt_tr, vector<double>& cnt_h, vector<double>& cnt_v, vector<double>& cnt_fpga)
+void separate_tags_per_channels(const long long* tags, const long long numtags, vector<double>& cnt_tr, vector<double>& cnt_h, vector<double>& cnt_v, vector<double>& cnt_fpga)
 {   
     cnt_tr.reserve(numtags);
     cnt_fpga.reserve(numtags);
@@ -278,7 +271,7 @@ void separate_tags_per_channels(long long* tags, long long numtags, vector<doubl
 /********************************************************************************
 *** find coincidences - set inersect
 */
-vector<cc_point> find_coincidences(vector<double>* ttags, vector<double>* htags, vector<double>* vtags, vector<double>* offsets) { ////////// const vector<double>* offsets) {
+vector<cc_point> find_coincidences(const vector<double>* ttags, const vector<double>* htags, const vector<double>* vtags, const vector<double>* offsets) { 
     const uint offset_len = offsets->size();
     vector<cc_point> result(offset_len);
     
@@ -290,9 +283,6 @@ vector<cc_point> find_coincidences(vector<double>* ttags, vector<double>* htags,
         
         // H
         vector<double> tmptags = *htags;
-        //for(auto& ht : tmptags) {
-        //    ht=round((ht-os)*10)/10;
-        //}                                       //////////std::ranges::for_each(tmptags.begin(), tmptags.end(), [&os](double ht) -> double { return round((ht-os)*10)/10; });
         std::ranges::for_each(tmptags.begin(), tmptags.end(), [&os](double &ht) { ht= round((ht-os)*10)/10; });
         vector<double> cc_tags = {};
         cc_tags.reserve(4096);
@@ -305,9 +295,6 @@ vector<cc_point> find_coincidences(vector<double>* ttags, vector<double>* htags,
         
         // V
         tmptags = *vtags;
-        //for(auto& vt : tmptags) {
-        //    vt=round((vt-os)*10)/10;
-        //}                                       //////////std::ranges::for_each(tmptags.begin(), tmptags.end(), [&os](double vt) -> double { return round((vt-os)*10)/10; });
         std::ranges::for_each(tmptags.begin(), tmptags.end(), [&os](double &vt) { vt = round((vt-os)*10)/10; });
         
         cc_tags = {};
@@ -329,7 +316,7 @@ vector<cc_point> find_coincidences(vector<double>* ttags, vector<double>* htags,
 /********************************************************************************
 *** find coincidences with trigger - set inersect - keep only coincidences where fpga signal is present too
 */
-vector<cc_point> find_coincidences(vector<double>* ttags, vector<double>* htags, vector<double>* vtags, const vector<double>* offsets, vector<double>* ftags) {
+vector<cc_point> find_coincidences(const vector<double>* ttags, const vector<double>* htags, const vector<double>* vtags, const vector<double>* offsets, const vector<double>* ftags) {
     const uint offset_len = offsets->size();
     vector<cc_point> result(offset_len);
     
@@ -378,7 +365,7 @@ vector<cc_point> find_coincidences(vector<double>* ttags, vector<double>* htags,
 //********************************************************************************
 //*** find coincidences - custom binary search
 //*/
-vector<cc_point> find_coincidences(vector<double>* ttags, vector<double>* htags, vector<double>* vtags, const vector<double>* offsets) {
+vector<cc_point> find_coincidences(const vector<double>* ttags, const vector<double>* htags, const vector<double>* vtags, const vector<double>* offsets) {
     vector<cc_point> result(offsets->size());
     
     #pragma omp parallel for
@@ -389,9 +376,9 @@ vector<cc_point> find_coincidences(vector<double>* ttags, vector<double>* htags,
         vector<double> tmptagsv = *vtags;
         int cc_h;
         int cc_v;
+        std::ranges::for_each(tmptagsh.begin(), tmptagsh.end(), [&os](double &ht) { ht= round((ht-os)*10)/10; });
+        std::ranges::for_each(tmptagsv.begin(), tmptagsv.end(), [&os](double &vt) { vt= round((ht-os)*10)/10; });
         
-        std::for_each(tmptagsh.begin(), tmptagsh.end(), [&os](double ht) -> double { return round((ht-os)*10)/10; });
-        std::for_each(tmptagsv.begin(), tmptagsv.end(), [&os](double vt) -> double { return round((vt-os)*10)/10; });
         vector<double> cc_h_tags = {};
         vector<double> cc_v_tags = {};
         
@@ -460,7 +447,7 @@ vector<cc_point> find_coincidences(vector<double>* ttags, vector<double>* htags,
 //********************************************************************************
 //*** find coincidences - unordered set
 //*/
-vector<cc_point> find_coincidences(vector<double>* ttags, vector<double>* htags, vector<double>* vtags, const vector<double>* offsets) {
+vector<cc_point> find_coincidences(const vector<double>* ttags, const vector<double>* htags, const vector<double>* vtags, const vector<double>* offsets) {
     vector<cc_point> result(offsets->size());
     
     std::unordered_set<double> tmpttags(ttags->begin(), ttags->end());
@@ -473,12 +460,8 @@ vector<cc_point> find_coincidences(vector<double>* ttags, vector<double>* htags,
         int cc_h;
         int cc_v;
         
-        for(auto& ht : tmptagsh) {
-            ht=round((ht-os)*10)/10;
-        }
-        for(auto& vt : tmptagsv) {
-            vt=round((vt-os)*10)/10;
-        }
+        std::ranges::for_each(tmptagsh.begin(), tmptagsh.end(), [&os](double &ht) { ht= round((ht-os)*10)/10; });
+        std::ranges::for_each(tmptagsv.begin(), tmptagsv.end(), [&os](double &vt) { vt= round((vt-os)*10)/10; });
         
         vector<double> cc_h_tags = {};
         vector<double> cc_v_tags = {};
@@ -514,7 +497,7 @@ vector<cc_point> find_coincidences(vector<double>* ttags, vector<double>* htags,
 //********************************************************************************
 //*** find coincidences - linear search
 //*/
-vector<cc_point> find_coincidences(vector<double>* ttags, vector<double>* htags, vector<double>* vtags, const vector<double>* offsets) {
+vector<cc_point> find_coincidences(const vector<double>* ttags, const vector<double>* htags, const vector<double>* vtags, const vector<double>* offsets) {
     vector<cc_point> result(offsets->size());
     
     #pragma omp parallel for
@@ -526,12 +509,8 @@ vector<cc_point> find_coincidences(vector<double>* ttags, vector<double>* htags,
         int cc_h;
         int cc_v;
         
-        for(auto& ht : tmptagsh) {
-            ht=round((ht-os)*10)/10;
-        }
-        for(auto& vt : tmptagsv) {
-            vt=round((vt-os)*10)/10;
-        }
+        std::ranges::for_each(tmptagsh.begin(), tmptagsh.end(), [&os](double &ht) { ht= round((ht-os)*10)/10; });
+        std::ranges::for_each(tmptagsv.begin(), tmptagsv.end(), [&os](double &vt) { vt= round((vt-os)*10)/10; });
         
         vector<double> cc_h_tags = {};
         vector<double> cc_v_tags = {};
@@ -585,7 +564,7 @@ vector<cc_point> find_coincidences(vector<double>* ttags, vector<double>* htags,
 /********************************************************************************
 *** find coincidences - STL BST
 */
-vector<cc_point> find_coincidences(vector<double>* ttags, vector<double>* htags, vector<double>* vtags, const vector<double>* offsets) {
+vector<cc_point> find_coincidences(const vector<double>* ttags, const vector<double>* htags, const vector<double>* vtags, const vector<double>* offsets) {
     const uint offset_len = offsets->size();
     vector<cc_point> result(offset_len);
     
@@ -597,9 +576,7 @@ vector<cc_point> find_coincidences(vector<double>* ttags, vector<double>* htags,
         
         // H
         vector<double> tmptags = *htags;
-        for(auto& ht : tmptags) {
-            ht=round((ht-os)*10)/10;
-        }
+        std::ranges::for_each(tmptags.begin(), tmptags.end(), [&os](double &ht) { ht= round((ht-os)*10)/10; });
         vector<double> cc_tags = {};
         cc_tags.reserve(4096);
         for (double htag : tmptags) {
@@ -612,9 +589,7 @@ vector<cc_point> find_coincidences(vector<double>* ttags, vector<double>* htags,
         
         // V
         tmptags = *vtags;
-        for(auto& vt : tmptags) {
-            vt=round((vt-os)*10)/10;
-        }
+        std::ranges::for_each(tmptags.begin(), tmptags.end(), [&os](double &vt) { vt= round((ht-os)*10)/10; });
         cc_tags = {};
         for (double vtag : tmptags) {
             if (binary_search(ttags->begin(), ttags->end(), vtag)) {
@@ -633,7 +608,7 @@ vector<cc_point> find_coincidences(vector<double>* ttags, vector<double>* htags,
 /********************************************************************************
 *** separate tag vectors
 */
-void cc_point_to_ccstruct(vector<cc_point> *pts, ccstruct *ccs) {//////////const vector<cc_point> *pts, ccstruct *ccs) {
+void cc_point_to_ccstruct(const vector<cc_point> *pts, ccstruct *ccs) {
     uint numpts = pts->size();
     vector<long> cc_h = {};
     cc_h.reserve(numpts);
@@ -665,7 +640,7 @@ void cc_point_to_ccstruct(vector<cc_point> *pts, ccstruct *ccs) {//////////const
 *** create vector holding range of values
 */
 template<typename T>
-vector<T> arange(T start, T stop, T step) {
+vector<T> arange(const T start, const T stop, const T step) {
     vector<T> values;
     for (T value = start; value < stop; value += step)
         values.emplace_back(value);
@@ -687,7 +662,7 @@ bool stringreplace(string& str, const string& from, const string& to) {
 /********************************************************************************
 *** print contents of a ccstruct
 */
-void print_ccstruct(ccstruct* dat) {//////////const ccstruct* dat) {
+void print_ccstruct(const ccstruct* dat) {
     cout << "offsets" << endl;
     for (uint i=0; i<dat->offsets.size(); ++i) {
         cout << dat->offsets[i] << ", ";
@@ -732,7 +707,7 @@ void print_ccstruct(ccstruct* dat) {//////////const ccstruct* dat) {
 /********************************************************************************
 *** save a ccstruct to disk using protobuf
 */
-int ccstruct_protobuf_todisk(ccstruct* data, string fname) {//////////const ccstruct* data, const string fname) {
+int ccstruct_protobuf_todisk(const ccstruct* data, const string fname) {
     cout << "writing to file " << fname << endl;
     ccset::ccset_data pbdat;
     
@@ -772,7 +747,7 @@ int ccstruct_protobuf_todisk(ccstruct* data, string fname) {//////////const ccst
 /********************************************************************************
 *** load a ccstruct from disk using protobuf
 */
-int ccstruct_protobuf_fromdisk(ccstruct* data, string fname)//////////const string fname)
+int ccstruct_protobuf_fromdisk(ccstruct* data, const string fname)
 {
     //read from disk
     ccset::ccset_data read_pbdat;

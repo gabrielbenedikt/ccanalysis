@@ -61,37 +61,37 @@ struct ccstruct {
     double meastime;
 };
 
-long long* readHDFfile(std::string fn, std::string dsetpath, long long& out_data_len);
-void separate_tags_per_channels(long long* tags, long long numtags, std::vector<double>& out_countst, std::vector<double>& out_countsh, std::vector<double>& out_countsv, std::vector<double>& out_countsfpga);
+long long* readHDFfile(const std::string fn, const std::string dsetpath, long long& out_data_len);
+void separate_tags_per_channels(const long long* tags, const long long numtags, std::vector<double>& out_countst, std::vector<double>& out_countsh, std::vector<double>& out_countsv, std::vector<double>& out_countsfpga);
 
 #if CCALGO==STL_SETINTERSECT
 // set intersect
-std::vector<cc_point> find_coincidences(std::vector<double>* ttags, std::vector<double>* htags, std::vector<double>* vtags,  std::vector<double>* offsets);  
+std::vector<cc_point> find_coincidences(const std::vector<double>* ttags, const std::vector<double>* htags, const std::vector<double>* vtags, const std::vector<double>* offsets);  
 #elif CCALGO==STL_SETINTERSECT_TRIGGER
 //set intersect. keep only coincidences where fpga is present too
-std::vector<cc_point> find_coincidences(std::vector<double>* ttags, std::vector<double>* htags, std::vector<double>* vtags, const std::vector<double>* offsets, std::vector<double>* ftags); 
+std::vector<cc_point> find_coincidences(const std::vector<double>* ttags, const std::vector<double>* htags, const std::vector<double>* vtags, const std::vector<double>* offsets, const std::vector<double>* ftags); 
 #elif CCALGO==BST
 // self implemented bst
-std::vector<cc_point> find_coincidences(std::vector<double>* ttags, std::vector<double>* htags, std::vector<double>* vtags, const std::vector<double>* offsets); 
+std::vector<cc_point> find_coincidences(const std::vector<double>* ttags, const std::vector<double>* htags, const std::vector<double>* vtags, const std::vector<double>* offsets); 
 #elif CCALGO==UNORDERED_SET
 // unordered set
-std::vector<cc_point> find_coincidences(std::vector<double>* ttags, std::vector<double>* htags, std::vector<double>* vtags, const std::vector<double>* offsets); 
+std::vector<cc_point> find_coincidences(const std::vector<double>* ttags, const std::vector<double>* htags, const std::vector<double>* vtags, const std::vector<double>* offsets); 
 #elif CCALGO==LINEAR_SEARCH
 // linear search
-std::vector<cc_point> find_coincidences(std::vector<double>* ttags, std::vector<double>* htags, std::vector<double>* vtags, const std::vector<double>* offsets);
+std::vector<cc_point> find_coincidences(const std::vector<double>* ttags, const std::vector<double>* htags, const std::vector<double>* vtags, const std::vector<double>* offsets);
 #elif CCALGO==STL_BST
 // stl bst
-std::vector<cc_point> find_coincidences(std::vector<double>* ttags, std::vector<double>* htags, std::vector<double>* vtags, const std::vector<double>* offsets); 
+std::vector<cc_point> find_coincidences(const std::vector<double>* ttags, const std::vector<double>* htags, const std::vector<double>* vtags, const std::vector<double>* offsets); 
 #endif
 
 void print_ccstruct(const ccstruct* dat);
-void cc_point_to_ccstruct( std::vector<cc_point> *pts, ccstruct *ccs);
-int ccstruct_protobuf_todisk( ccstruct* data,  std::string fname);
+void cc_point_to_ccstruct(const std::vector<cc_point> *pts, ccstruct *ccs);
+int ccstruct_protobuf_todisk(const ccstruct* data, const std::string fname);
 int ccstruct_protobuf_fromdisk(ccstruct* data, const std::string fname);
 
 // helpers
 template<typename T>
-std::vector<T> arange(T start, T stop, T step = 1);
+std::vector<T> arange(const T start, const T stop, const T step = 1);
 bool stringreplace(std::string& str, const std::string& from, const std::string& to);
 
 std::vector<std::string> get_new_tagfiles();
