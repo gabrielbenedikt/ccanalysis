@@ -1,17 +1,18 @@
 #ifndef CCANALYSIS_H
 #define CCANALYSIS_H
 
-#define CC_ALGO STL_SETINTERSECT
-                //STL_SETINTERSECT_TRIGGER
-                //BST
-                //UNORDERED_SET
-                //LINEAR_SEARCH
-                //STL_BST
+#define CC_ALGO_STL_SETINTERSECT
+                //CC_ALGO_STL_SETINTERSECT_TRIGGER
+                //CC_ALGO_BST
+                //CC_ALGO_UNORDERED_SET
+                //CC_ALGO_LINEAR_SEARCH
+                //CC_ALGO_STL_BST
+#define PREPROCESS_TRIGGER_WITH_FPGA_TAGS
 
 #include <algorithm>
 #include <bits/stdc++.h>
 #include <chrono>
-//#include <execution>
+#include <execution>
 #include <filesystem>
 #include <fstream>
 #include <H5Cpp.h>
@@ -31,8 +32,8 @@
 double HIST_START = 0;
 double HIST_STOP  = 0;
 double HIST_STEP  = 0.1;
-double FPGA_DELAY_MIN = 0;
-double FPGA_DELAY_MAX = 0;
+double FPGA_T_MIN = 0;
+double FPGA_T_MAX = 0;
 int CHN_TR = 49;
 int CHN_FPGA = 1;
 int CHN_H = 25;
@@ -64,22 +65,24 @@ struct ccstruct {
 long long* readHDFfile(const std::string fn, const std::string dsetpath, long long& out_data_len);
 void separate_tags_per_channels(const long long* tags, const long long numtags, std::vector<double>& out_countst, std::vector<double>& out_countsh, std::vector<double>& out_countsv, std::vector<double>& out_countsfpga);
 
-#if CCALGO==STL_SETINTERSECT
+std::vector<double> find_coincidences_trigger_fpga(const std::vector<double>* ftags, const std::vector<double>* ttags);
+
+#ifdef CC_ALGO_STL_SETINTERSECT
 // set intersect
-std::vector<cc_point> find_coincidences(const std::vector<double>* ttags, const std::vector<double>* htags, const std::vector<double>* vtags, const std::vector<double>* offsets);  
-#elif CCALGO==STL_SETINTERSECT_TRIGGER
+std::vector<cc_point> find_coincidences(const std::vector<double>* ttags, const std::vector<double>* htags, const std::vector<double>* vtags, const std::vector<double>* offsets); 
+#elif defined CC_ALGO_STL_SETINTERSECT_TRIGGER
 //set intersect. keep only coincidences where fpga is present too
 std::vector<cc_point> find_coincidences(const std::vector<double>* ttags, const std::vector<double>* htags, const std::vector<double>* vtags, const std::vector<double>* offsets, const std::vector<double>* ftags); 
-#elif CCALGO==BST
+#elif defined CC_ALGO_BST
 // self implemented bst
 std::vector<cc_point> find_coincidences(const std::vector<double>* ttags, const std::vector<double>* htags, const std::vector<double>* vtags, const std::vector<double>* offsets); 
-#elif CCALGO==UNORDERED_SET
+#elif defined CC_ALGO_UNORDERED_SET
 // unordered set
 std::vector<cc_point> find_coincidences(const std::vector<double>* ttags, const std::vector<double>* htags, const std::vector<double>* vtags, const std::vector<double>* offsets); 
-#elif CCALGO==LINEAR_SEARCH
+#elif defined CC_ALGO_LINEAR_SEARCH
 // linear search
-std::vector<cc_point> find_coincidences(const std::vector<double>* ttags, const std::vector<double>* htags, const std::vector<double>* vtags, const std::vector<double>* offsets);
-#elif CCALGO==STL_BST
+std::vector<cc_point> find_coincidences(const std::vector<double>* ttags, const std::vector<double>* htags, const std::vector<double>* vtags, const std::vector<double>* offsets); 
+#elif defined CC_ALGO_STL_BST
 // stl bst
 std::vector<cc_point> find_coincidences(const std::vector<double>* ttags, const std::vector<double>* htags, const std::vector<double>* vtags, const std::vector<double>* offsets); 
 #endif

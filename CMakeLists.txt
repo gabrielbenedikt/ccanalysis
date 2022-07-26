@@ -27,11 +27,11 @@ cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
    find_package(HDF5 REQUIRED COMPONENTS C CXX)
    find_package(OpenMP REQUIRED)
    find_package(Protobuf REQUIRED)
-
+   find_package(TBB REQUIRED tbb)
 
    add_executable(ccanalysis ccanalysis.cpp ccset.pb.cc)
    set_property(TARGET ccanalysis PROPERTY CXX_STANDARD 20)
-   target_link_libraries(ccanalysis ${HDF5_HL_LIBRARIES} ${HDF5_CXX_LIBRARIES} ${HDF5_LIBRARIES} ${PROTOBUF_LIBRARY} OpenMP::OpenMP_CXX)
+   target_link_libraries(ccanalysis ${HDF5_HL_LIBRARIES} ${HDF5_CXX_LIBRARIES} ${HDF5_LIBRARIES} ${PROTOBUF_LIBRARY} ${TBB_IMPORTED_TARGETS} OpenMP::OpenMP_CXX)
    target_include_directories(ccanalysis PUBLIC ${HDF5_INCLUDE_DIRS})
 
    include(CheckIPOSupported)

@@ -40,16 +40,27 @@ int main(void)
         vector<double> cnt_fpga = {};
         separate_tags_per_channels(data, data_len, cnt_tr, cnt_h, cnt_v, cnt_fpga);
         
-        std::ranges::for_each(cnt_tr.begin(), cnt_tr.end(), [](double &tt) { tt=round(tt*10)/10; });
+        std::for_each(std::execution::par_unseq, cnt_tr.begin(), cnt_tr.end(), [](double &tt) { tt=std::round(tt*10)/10; });
+#if defined(PREPROCESS_TRIGGER_WITH_FPGA_TAGS) || defined(CC_ALGO_STL_SETINTERSECT_TRIGGER)
+        std::for_each(std::execution::par_unseq, cnt_fpga.begin(), cnt_fpga.end(), [](double &ft) { ft=std::round(ft*10)/10; });
+#endif
 
+        
+#ifdef PREPROCESS_TRIGGER_WITH_FPGA_TAGS
+        cnt_tr = find_coincidences_trigger_fpga(&cnt_fpga, &cnt_tr);
+#endif
         /*
         * find coincidences
         */
         double meastime = (cnt_tr.back()-cnt_tr.front())*pow(10,-9);
         vector<double> offsets = arange<double>(HIST_START,HIST_STOP,HIST_STEP);
-        
-        vector<cc_point> hist_points = find_coincidences(&cnt_tr, &cnt_h, &cnt_v, &offsets);
-        
+
+#ifdef CC_ALGO_STL_SETINTERSECT_TRIGGER
+            vector<cc_point> hist_points = find_coincidences(&cnt_tr, &cnt_h, &cnt_v, &offsets, &cnt_fpga);
+#else
+            vector<cc_point> hist_points = find_coincidences(&cnt_tr, &cnt_h, &cnt_v, &offsets);
+#endif
+            
         //convert point vector to single struct
         ccstruct hist_combined;
         cc_point_to_ccstruct(&hist_points, &hist_combined);
@@ -69,15 +80,13 @@ int main(void)
         stringreplace(savefname,".h5", newext);
         ccstruct_protobuf_todisk(&hist_combined, savefname);
         
-        
-        
         auto endtime = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::seconds>(endtime - starttime).count();
         ++nanalyzed;
         SPENT_TIME += duration; 
         ETA = (SPENT_TIME/nanalyzed)*(newtagfiles.size()-nanalyzed);
         
-        cout << "number of trigger / H / V tags: " << cnt_tr.size() << " / " << cnt_h.size() << " / " << cnt_v.size() << endl;
+        cout << "number of trigger / fpga / H / V tags: " << cnt_fpga.size() << " / " << cnt_tr.size() << " / " << cnt_h.size() << " / " << cnt_v.size() << endl;
         cout << "measurement time: " << meastime << endl;
         cout << "analysis T / avg T / ETA: " << duration << "s / " << SPENT_TIME/i <<"s / " << ETA/(60*omp_get_num_threads()) <<"m" << endl;
         
@@ -228,44 +237,79 @@ void separate_tags_per_channels(const long long* tags, const long long numtags, 
      */
     if ((cnt_tr.front() > 0) && (cnt_tr.back() < 0)) {
         cout << "tagjump detected."  << endl;
-        //cout << "first    element: " << tags[1]         << endl;
-        //cout << "second   element: " << tags[3]         << endl;
-        //cout << "2nt last element: " << tags[numtags-3] << endl;
-        //cout << "last     element: " << tags[numtags-1] << endl;
         /* tagjump */
         // find discontinuity
         auto is_neg = [](double x) { return ( x < 0 ); };
-        auto it = ranges::find_if(cnt_tr, is_neg);
+        //auto it = std::ranges::find_if(cnt_tr, is_neg);
+        auto it = std::find_if(std::execution::par_unseq, cnt_tr.begin(), cnt_tr.end(), is_neg);
         
         // add the last positive element to all remaining elements in vector
         // by taking this difference, the first tag after the jump will be a 'double click'.
         // Better: find out range of tags and add this
         
         double diff = pow(2,42);                                    /////////////////////double diff = *prev(it) - *it;
-        //cout << "tag before jump: " << *prev(it) << endl;
-        //cout << "tag after jump : " << *it << endl;
-        transform(it, cnt_tr.end(), it, [&diff](double x) {return x+diff; } ); 
+        std::transform(std::execution::par_unseq, it, cnt_tr.end(), it, [&diff](double x) {return x+diff; } ); 
         
         //now, do the same for cnt_h and cnt_v
         if ((cnt_h.front() > 0) && (cnt_h.back() < 0)) {
-            auto it = ranges::find_if(cnt_h, is_neg);
+            //auto it = std::ranges::find_if(cnt_h, is_neg);
+            auto it = std::find_if(std::execution::par_unseq, cnt_h.begin(), cnt_h.end(), is_neg);
             //diff = *prev(it) - *it;
-            transform(it, cnt_h.end(), it, [&diff](double x) {return x+diff; } ); 
+            std::transform(std::execution::par_unseq, it, cnt_h.end(), it, [&diff](double x) {return x+diff; } ); 
         }
         if ((cnt_v.front() > 0) && (cnt_v.back() < 0)) {
-            auto it = ranges::find_if(cnt_v, is_neg);
+            //auto it = std::ranges::find_if(cnt_v, is_neg);
+            auto it = std::find_if(std::execution::par_unseq, cnt_v.begin(), cnt_v.end(), is_neg);
             //diff = *prev(it) - *it;
-            transform(it, cnt_v.end(), it, [&diff](double x) {return x+diff; } ); 
+            std::transform(std::execution::par_unseq, it, cnt_v.end(), it, [&diff](double x) {return x+diff; } ); 
         }
         if ((cnt_fpga.front() > 0) && (cnt_fpga.back() < 0)) {
-            auto it = ranges::find_if(cnt_fpga, is_neg);
+            //auto it = std::ranges::find_if(cnt_fpga, is_neg);
+            auto it = std::find_if(std::execution::par_unseq, cnt_fpga.begin(), cnt_fpga.end(), is_neg);
             //diff = *prev(it) - *it;
-            transform(it, cnt_fpga.end(), it, [&diff](double x) {return x+diff; } ); 
+            std::transform(std::execution::par_unseq, it, cnt_fpga.end(), it, [&diff](double x) {return x+diff; } ); 
         }
     } // else same sign, thus no tag jump
 }
 
 
+
+/********************************************************************************
+*** find coincidences - between trigger and fpga signal. return trimmed trigger tag vector
+*/
+std::vector<double> find_coincidences_trigger_fpga(const std::vector<double>* ftags, const std::vector<double>* ttags) {
+
+    std::vector<double> trimmed_ttags;
+    
+    std::cout << "looking for trigger/fpga coincidences" << std::endl;
+    
+    double tt = 0;
+    double ft=0;
+    size_t startj = 0;
+    
+    for (size_t i = 0; i < ttags->size(); ++i) {
+        tt = ttags->at(i);
+        for (size_t j = startj; j < ftags->size(); ++j) {
+            ft = ftags->at(j);
+            
+            if (ft > (tt+FPGA_T_MIN)) {
+                if (ft < (tt+FPGA_T_MAX)) {
+                    trimmed_ttags.emplace_back(tt);
+                    startj = j;
+                }
+                break;
+            } else {
+                startj = j;
+            }
+        }
+    }
+    
+    std::cout << "done" << std::endl;
+    std::cout << "#all  triggers: " << ttags->size() << std::endl;
+    std::cout << "#fpga+triggers: " << trimmed_ttags.size() << std::endl;
+    
+    return trimmed_ttags;
+}
 
 #if CCALGO==STL_SETINTERSECT
 /********************************************************************************
@@ -283,10 +327,10 @@ vector<cc_point> find_coincidences(const vector<double>* ttags, const vector<dou
         
         // H
         vector<double> tmptags = *htags;
-        std::ranges::for_each(tmptags.begin(), tmptags.end(), [&os](double &ht) { ht= round((ht-os)*10)/10; });
+        std::for_each(std::execution::unseq, tmptags.begin(), tmptags.end(), [&os](double &ht) { ht = std::round((ht-os)*10)/10; });
         vector<double> cc_tags = {};
         cc_tags.reserve(4096);
-        set_intersection(ttags->begin(), ttags->end(),
+        std::set_intersection(std::execution::unseq, ttags->begin(), ttags->end(),
                          tmptags.begin(), tmptags.end(),
                          std::back_inserter(cc_tags));
 
@@ -295,14 +339,12 @@ vector<cc_point> find_coincidences(const vector<double>* ttags, const vector<dou
         
         // V
         tmptags = *vtags;
-        std::ranges::for_each(tmptags.begin(), tmptags.end(), [&os](double &vt) { vt = round((vt-os)*10)/10; });
+        std::for_each(std::execution::unseq, tmptags.begin(), tmptags.end(), [&os](double &vt) { vt = std::round((vt-os)*10)/10; });
         
         cc_tags = {};
-        set_intersection(ttags->begin(), ttags->end(),
+        std::set_intersection(std::execution::unseq, ttags->begin(), ttags->end(),
                          tmptags.begin(), tmptags.end(),
                          std::back_inserter(cc_tags));
-
-
 
         ccdata.cc_v = cc_tags.size();
         ccdata.cc_v_tags = cc_tags;
@@ -329,10 +371,10 @@ vector<cc_point> find_coincidences(const vector<double>* ttags, const vector<dou
         // H
         vector<double> tmptags = *htags;
         
-        std::ranges::for_each(tmptags.begin(), tmptags.end(), [&os](double ht) -> double { return round((ht-os)*10)/10; });
+        std::for_each(std::execution::unseq, tmptags.begin(), tmptags.end(), [&os](double &ht) { ht= std::round((ht-os)*10)/10; });
         vector<double> cc_tags = {};
         cc_tags.reserve(4096);
-        set_intersection(ttags->begin(), ttags->end(),
+        std::set_intersection(std::execution::unseq, ttags->begin(), ttags->end(),
                          tmptags.begin(), tmptags.end(),
                          std::back_inserter(cc_tags));
 
@@ -344,14 +386,12 @@ vector<cc_point> find_coincidences(const vector<double>* ttags, const vector<dou
         
         // V
         tmptags = *vtags;
-        std::ranges::for_each(tmptags.begin(), tmptags.end(), [&os](double vt) -> double { return round((vt-os)*10)/10; });
+        std::for_each(std::execution::unseq, tmptags.begin(), tmptags.end(), [&os](double &vt) { vt = std::round((vt-os)*10)/10; });
         
         cc_tags = {};
-        set_intersection(ttags->begin(), ttags->end(),
+        std::set_intersection(std::execution::unseq, ttags->begin(), ttags->end(),
                          tmptags.begin(), tmptags.end(),
                          std::back_inserter(cc_tags));
-
-
 
         ccdata.cc_v = cc_tags.size();
         ccdata.cc_v_tags = cc_tags;
@@ -885,9 +925,9 @@ void read_config() {
             } else if (name == "chn_fpga") {
                 CHN_FPGA = stoi(value);
             } else if (name == "fpga_delay_min") {
-                FPGA_DELAY_MIN = stod(value);
+                FPGA_T_MIN = stod(value);
             } else if (name == "fpga_delay_max") {
-                FPGA_DELAY_MAX = stod(value);
+                FPGA_T_MAX = stod(value);
             } else if (name == "truncate") {
                 TRUNCATE_S = stoi(value);
             } else {
@@ -905,6 +945,8 @@ void read_config() {
     cout << "hist_step  : " << HIST_STEP  << "ns" << endl;
     cout << "thigger chn: " << CHN_TR     << endl;
     cout << "fpga chn   : " << CHN_FPGA   << endl;
+    cout << "fpga t_min : " << FPGA_T_MIN << "ns" << endl;
+    cout << "fpga t_max : " << FPGA_T_MAX << "ns" << endl;
     cout << "H chn      : " << CHN_H      << endl;
     cout << "V chn      : " << CHN_V      << endl;
     cout << "truncate at: " << TRUNCATE_S << "s" << endl;
