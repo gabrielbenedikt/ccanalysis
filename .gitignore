@@ -67,3 +67,6 @@ perf.data*
 callgrind*
 .cmake/
 vec.opt
+*.h5
+*.pbdat
+out*
