@@ -71,3 +71,4 @@ vec.opt
 *.pbdat
 out*
 ccanalysis
+*.swp*
