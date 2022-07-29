@@ -36,6 +36,7 @@ int CHN_FPGA = 1;
 int CHN_H = 25;
 int CHN_V = 29;
 int TRUNCATE_S = -1;
+uint16_t NUM_THREADS = 1;
 
 double ETA = 0;
 double SPENT_TIME = 0;

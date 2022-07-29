@@ -5,9 +5,9 @@ using namespace std;
 
 int main(void)
 {   
-    omp_set_num_threads(8);
-
     read_config();
+
+    omp_set_num_threads(NUM_THREADS);
     
     vector<string> newtagfiles = get_new_tagfiles();
 
@@ -950,6 +950,8 @@ void read_config() {
                 FPGA_HIST_STEP = stod(value);
             } else if (name == "truncate") {
                 TRUNCATE_S = stoi(value);
+            } else if ("num_threads") {
+                NUM_STEPS = stoi(value);
             } else {
                 cout << "unknown config name: " << name << endl;
             }
