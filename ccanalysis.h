@@ -69,16 +69,6 @@ std::vector<cc_point> find_coincidences(const std::vector<double>* ttags, const 
 
 //set intersect. keep only coincidences where fpga is present too
 std::vector<cc_point> find_coincidences_fpga(const std::vector<double>* ttags, const std::vector<double>* htags, const std::vector<double>* vtags, const std::vector<double>* offsets, const std::vector<double>* ftags);
-#ifdef NOPE
-// self implemented bst
-std::vector<cc_point> find_coincidences(const std::vector<double>* ttags, const std::vector<double>* htags, const std::vector<double>* vtags, const std::vector<double>* offsets); 
-// unordered set
-std::vector<cc_point> find_coincidences(const std::vector<double>* ttags, const std::vector<double>* htags, const std::vector<double>* vtags, const std::vector<double>* offsets); 
-// linear search
-std::vector<cc_point> find_coincidences(const std::vector<double>* ttags, const std::vector<double>* htags, const std::vector<double>* vtags, const std::vector<double>* offsets);
-// stl bst
-std::vector<cc_point> find_coincidences(const std::vector<double>* ttags, const std::vector<double>* htags, const std::vector<double>* vtags, const std::vector<double>* offsets); 
-#endif
 
 void print_ccstruct(const ccstruct* dat);
 void cc_point_to_ccstruct(const std::vector<cc_point> *pts, ccstruct *ccs);
