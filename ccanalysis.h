@@ -82,6 +82,10 @@ template<typename T>
 std::vector<T> arange(const T start, const T stop, const T step = 1);
 template<typename T>
 void print_vector(const std::vector<T> v);
+template<typename T>
+std::vector<T> unique(std::vector<T> v);
+template<typename T>
+std::vector<T> flatten(std::vector<std::vector<T>> vv);
 bool stringreplace(std::string& str, const std::string& from, const std::string& to);
 
 std::vector<std::string> get_new_tagfiles();

@@ -764,3 +764,30 @@ void print_vector(const std::vector<T> v) {
         }
     }
 }
+
+/********************************************************************************
+*** turn vector of vectors into vector
+*/
+template<typename T>
+std::vector<T> flatten(std::vector<std::vector<T>> vv) {
+    std::vector<T> result;
+    for (auto v: vv) {
+        result.insert(result.end(), v.begin(), v.end());
+    }
+    return result;
+}
+
+/********************************************************************************
+*** find unique entries in vector
+*/
+template<typename T>
+std::vector<T> unique(std::vector<T> v) {
+    std::vector<T> result;
+    for (auto e: v) {
+        if (std::find(result.begin(), result.end(), e) != result.end()) {
+            result.push_back(e);
+        }
+    }
+    return result;
+}
+
