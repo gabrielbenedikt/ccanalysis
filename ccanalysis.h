@@ -83,5 +83,6 @@ bool stringreplace(std::string& str, const std::string& from, const std::string&
 std::vector<std::string> get_new_tagfiles();
 bool fileExists(const std::string& fn);
 void read_config();
+std::vector<std::vector<uint16_t>> parse_patterns(std::string s);
 
 #endif //CCANALYSIS_H

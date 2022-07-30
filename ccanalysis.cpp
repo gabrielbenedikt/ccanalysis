@@ -735,3 +735,57 @@ void read_config() {
 
 }
 
+/********************************************************************************
+*** parse config string containing patternspatterns
+*/
+std::vector<std::vector<uint16_t>> parse_patterns(std::string s) {
+    if (!(s.starts_with("{{"))) {
+        std::cout << "pattern string malformatted" << endl;
+    }
+    if (!(s.ends_with("}}"))) {
+        std::cout << "pattern string malformatted" << endl;
+    }
+    
+    s.erase(0,1);
+    s.erase(s.length()-1,1);
+    
+    size_t vec_start_idx = 0;
+    size_t vec_stop_idx = 0;
+    std::vector<size_t> sep_idxs = {};
+    size_t curr_sep_idx = 0;
+    
+    std::string vector_string = "";
+    std::vector<uint16_t> pattern = {};
+    std::vector<std::vector<uint16_t>> patterns = {};
+    std::string channelstr = "";
+    size_t chan_start_idx = 0;
+    size_t chan_stop_idx = 0;
+    // separate patterns
+    while (vec_stop_idx < s.length()-1) {
+        vec_start_idx =  s.find("{", vec_start_idx);
+        vec_stop_idx = s.find("}", vec_start_idx);
+        vector_string = s.substr(vec_start_idx, vec_stop_idx-vec_start_idx+1);
+        
+        sep_idxs = {};
+        sep_idxs.push_back(vector_string.find('{'));
+        curr_sep_idx = vector_string.find(',', 0);
+        while(curr_sep_idx != string::npos) {
+            sep_idxs.push_back(curr_sep_idx);
+            curr_sep_idx = vector_string.find(',',curr_sep_idx+1);
+        }
+        sep_idxs.push_back(vector_string.find('}'));
+        
+        //get channels
+        pattern = {};
+        for (size_t i=0; i< sep_idxs.size()-1; ++i) {
+            channelstr = vector_string.substr(sep_idxs[i]+1, sep_idxs[i+1]-sep_idxs[i]-1);
+            channelstr = std::regex_replace(channelstr, std::regex(R"([\D])"), "");
+            pattern.push_back(stoi(channelstr));
+        }
+        patterns.push_back(pattern);
+        
+        vec_start_idx = vec_stop_idx;
+    }
+    
+    return patterns;
+}

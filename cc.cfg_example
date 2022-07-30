@@ -2,6 +2,7 @@ num_threads=4
 hist_start=3550.0
 hist_stop=3590.0
 hist_step=0.1
+patterns={{1}, {1,2}, {1,3}, {2,3}, {1,2,3}, {25,49}, {29,49}}
 chn_h=25
 chn_v=29
 chn_tr=49
