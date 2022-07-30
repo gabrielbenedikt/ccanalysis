@@ -80,6 +80,8 @@ int ccstruct_protobuf_fromdisk(ccstruct* data, const std::string fname);
 // helpers
 template<typename T>
 std::vector<T> arange(const T start, const T stop, const T step = 1);
+template<typename T>
+void print_vector(const std::vector<T> v);
 bool stringreplace(std::string& str, const std::string& from, const std::string& to);
 
 std::vector<std::string> get_new_tagfiles();

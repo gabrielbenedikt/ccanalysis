@@ -16,13 +16,7 @@ int main(void)
     std::mt19937 g(rd());
     std::ranges::shuffle ( newtagfiles, g);
 
-    cout << "new files: "<< endl;
-    for (const auto &e: newtagfiles) {
-        cout << e << endl;
-    }
-    
     uint nanalyzed = 0;
-    //#pragma omp parallel for num_threads(2)
     for ( uint i = 0; i<newtagfiles.size(); ++i ) {
         auto starttime = std::chrono::high_resolution_clock::now();
         string fn = newtagfiles[i];
@@ -670,7 +664,9 @@ void read_config() {
                 cfg.FPGA_HIST_STEP = stod(value);
             } else if (name == "truncate") {
                 cfg.TRUNCATE_S = stoi(value);
-            } else if ("num_threads") {
+            } else if (name == "patterns") {
+                cfg.patterns = parse_patterns(value);
+            }else if ("num_threads") {
                 cfg.NUM_THREADS = stoi(value);
             }else if ("tagger_resolution") {
                 cfg.CS = stod(value);
@@ -695,6 +691,10 @@ void read_config() {
     cout << "use fpga chan : " << cfg.FPGA_USE   << endl;
     cout << "fpga delay min: " << cfg.FPGA_DELAY_MIN << "ns" << endl;
     cout << "fpga delay max: " << cfg.FPGA_DELAY_MAX << "ns" << endl;
+    cout << "patterns:     : " << endl;
+    for (auto e: cfg.patterns) {
+        print_vector(e);
+    }
 
 }
 
@@ -749,4 +749,18 @@ std::vector<std::vector<uint16_t>> parse_patterns(std::string s) {
     }
     
     return patterns;
+}
+
+/********************************************************************************
+*** create vector holding range of values
+*/
+template<typename T>
+void print_vector(const std::vector<T> v) {
+    for (T e : v) {
+        if (e != v.back()) {
+            std::cout << e << ", ";
+        } else {
+            std::cout << e << endl;
+        }
+    }
 }
