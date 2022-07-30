@@ -7,7 +7,7 @@ int main(void)
 {   
     read_config();
 
-    omp_set_num_threads(NUM_THREADS);
+    omp_set_num_threads(cfg.NUM_THREADS);
     
     vector<string> newtagfiles = get_new_tagfiles();
 
@@ -30,8 +30,8 @@ int main(void)
         // check if there is already an analyzed datafile. could appear if several PCs are working on the same dataset
         string savefname = fn;
         string newext;
-        if (TRUNCATE_S > 0) {
-            string truncstr = string(3 - to_string(TRUNCATE_S).length(), '0') + to_string(TRUNCATE_S);
+        if (cfg.TRUNCATE_S > 0) {
+            string truncstr = string(3 - to_string(cfg.TRUNCATE_S).length(), '0') + to_string(cfg.TRUNCATE_S);
             newext = "_trunc"+ truncstr +"_ccs.pbdat";
         } else {
             newext = "_trunc000_ccs.pbdat";
@@ -73,10 +73,10 @@ int main(void)
         * find coincidences
         */
         double meastime = (cnt_tr.back()-cnt_tr.front())*pow(10,-9);
-        vector<double> offsets = arange<double>(HIST_START,HIST_STOP,HIST_STEP);
+        vector<double> offsets = arange<double>(cfg.HIST_START,cfg.HIST_STOP,cfg.HIST_STEP);
         
         vector<cc_point> hist_points;
-        if (FPGA_USE > 0) {
+        if (cfg.FPGA_USE > 0) {
             cout << "with fpga" << endl;
             hist_points = find_coincidences_fpga(&cnt_tr, &cnt_h, &cnt_v, &offsets, &cnt_fpga);
         } else {
@@ -128,41 +128,12 @@ long long* readHDFfile(const string fn, const string datasetPath, long long& out
     // get the dataspace
     H5::DataSpace dataspace = dataset.getSpace();
   
-    
-//    H5T_class_t type_class = dataset.getTypeClass();
-   /*
-    * Get class of datatype and print message if it's an integer.
-    */
-//    if( type_class == H5T_INTEGER ) {
-//        cout << "Data set has INTEGER type" << endl;
-//        H5::IntType intype = dataset.getIntType(); // Get the integer datatype
-//
-//        H5std_string order_string; // Get order of datatype and print endianness.
-//        /*H5T_order_t order = */ intype.getOrder( order_string );
-//        cout << order_string << endl;
-//
-//       size_t size = intype.getSize(); //Get size of the data element stored in file and print it.
-//       cout << "Data size is " << size << endl;
-//
-//    } else if ( type_class == H5T_FLOAT ) {
-//        cout << "Data set has FLOAT type" << endl;
-//    } else {
-//        cout << "Data set type: " << type_class << endl;
-//    }
-    
-    /*
-    * Get the number of dimensions in the dataspace.
-    */
-//    int rank = dataspace.getSimpleExtentNdims();
     /*
     * Get the dimension size of each dimension in the dataspace and
     * display them.
     */
     hsize_t dims_out[2];
     /*int dimensions = */ dataspace.getSimpleExtentDims( dims_out, NULL);
-//    cout << "rank " << rank << ", dimensions " <<
-//    (unsigned long)(dims_out[0]) << " x " <<
-//    (unsigned long)(dims_out[1]) << endl;
 
     int NX=dims_out[0];
     int NY=dims_out[1];
@@ -198,20 +169,14 @@ void separate_tags_per_channels(const long long* tags, const long long numtags, 
     cnt_v.reserve(numtags);
     
     long long maxtag = numtags;
-    //cout << "separate" << endl;
-    if (TRUNCATE_S > 0) {
-        //cout << "trunc" << endl;
+    if (cfg.TRUNCATE_S > 0) {
         double firsttag = tags[1]*CS;
         double lasttag = 0;
-        //cout << "first tag  : " << firsttag*pow(10,-9) << endl;
-        //cout << "end tag    : " << tags[numtags-1]*CS*pow(10,-9) << endl;
-        //cout << "trunkate at: " << TRUNCATE_S << endl;
         for (long long i=2; i<numtags; i+=2) {
             lasttag = tags[i+1]*CS;
             //some tags are zero. this breaks the comparison
             if (lasttag!=0) {
-                if ((lasttag-firsttag)>TRUNCATE_S*pow(10,9)) {
-                    //cout << "found tag to truncate at idx " << i << ": tag " << lasttag*pow(10,-9) << endl;
+                if ((lasttag-firsttag)>cfg.TRUNCATE_S*pow(10,9)) {
                     maxtag = i;
                     break;
                 }
@@ -225,13 +190,13 @@ void separate_tags_per_channels(const long long* tags, const long long numtags, 
         currtag = tags[i+1]*CS;
         //some tags are zero. this breaks stuff. exclude them. effing tagger.
         if (currtag!=0) {
-            if (tags[i]==CHN_TR) {
+            if (tags[i]==cfg.CHN_TR) {
                 cnt_tr.emplace_back(tags[i+1]*CS);
-            } else if (tags[i]==CHN_H) {
+            } else if (tags[i]==cfg.CHN_H) {
                 cnt_h.emplace_back(tags[i+1]*CS);
-            } else if (tags[i]==CHN_V) {
+            } else if (tags[i]==cfg.CHN_V) {
                 cnt_v.emplace_back(tags[i+1]*CS);
-            } else if (tags[i]==CHN_FPGA) {
+            } else if (tags[i]==cfg.CHN_FPGA) {
                 cnt_fpga.emplace_back(tags[i+1]*CS);
             }
         }
@@ -252,10 +217,6 @@ void separate_tags_per_channels(const long long* tags, const long long numtags, 
      */
     if ((cnt_tr.front() > 0) && (cnt_tr.back() < 0)) {
         cout << "tagjump detected."  << endl;
-        //cout << "first    element: " << tags[1]         << endl;
-        //cout << "second   element: " << tags[3]         << endl;
-        //cout << "2nt last element: " << tags[numtags-3] << endl;
-        //cout << "last     element: " << tags[numtags-1] << endl;
         /* tagjump */
         // find discontinuity
         auto is_neg = [](double x) { return ( x < 0 ); };
@@ -266,8 +227,6 @@ void separate_tags_per_channels(const long long* tags, const long long numtags, 
         // Better: find out range of tags and add this
         
         double diff = pow(2,42);                                    /////////////////////double diff = *prev(it) - *it;
-        //cout << "tag before jump: " << *prev(it) << endl;
-        //cout << "tag after jump : " << *it << endl;
         transform(it, cnt_tr.end(), it, [&diff](double x) {return x+diff; } ); 
         
         //now, do the same for cnt_h and cnt_v
@@ -364,8 +323,8 @@ vector<cc_point> find_coincidences_fpga(const vector<double>* ttags, const vecto
         //check coincidences between fpga and cc_tags
         vector<double> ccc_tags = {};
         for (double cctag : cc_tags) {
-            auto lbh = std::lower_bound(fpga_tags_rounded.begin(), fpga_tags_rounded.end(), cctag+FPGA_DELAY_MIN);
-            auto ubh = std::upper_bound(fpga_tags_rounded.begin(), fpga_tags_rounded.end(), cctag+FPGA_DELAY_MAX);
+            auto lbh = std::lower_bound(fpga_tags_rounded.begin(), fpga_tags_rounded.end(), cctag+cfg.FPGA_DELAY_MIN);
+            auto ubh = std::upper_bound(fpga_tags_rounded.begin(), fpga_tags_rounded.end(), cctag+cfg.FPGA_DELAY_MAX);
             if (lbh == ubh || lbh == fpga_tags_rounded.end() || ubh == fpga_tags_rounded.end()) {
             } else {
                 ccc_tags.emplace_back(cctag);
@@ -388,8 +347,8 @@ vector<cc_point> find_coincidences_fpga(const vector<double>* ttags, const vecto
         ccc_tags = {};
         ccc_tags.reserve(4096);
         for (double cctag : cc_tags) {
-            auto lbv = std::lower_bound(fpga_tags_rounded.begin(), fpga_tags_rounded.end(), cctag+FPGA_DELAY_MIN);
-            auto ubv = std::upper_bound(fpga_tags_rounded.begin(), fpga_tags_rounded.end(), cctag+FPGA_DELAY_MAX);
+            auto lbv = std::lower_bound(fpga_tags_rounded.begin(), fpga_tags_rounded.end(), cctag+cfg.FPGA_DELAY_MIN);
+            auto ubv = std::upper_bound(fpga_tags_rounded.begin(), fpga_tags_rounded.end(), cctag+cfg.FPGA_DELAY_MAX);
             if (lbv == ubv || lbv == fpga_tags_rounded.end() || ubv == fpga_tags_rounded.end()) {
             } else {
                 ccc_tags.emplace_back(cctag);
@@ -445,6 +404,8 @@ vector<T> arange(const T start, const T stop, const T step) {
         values.emplace_back(value);
     return values;
 }
+
+
 
 
 /********************************************************************************
@@ -606,8 +567,8 @@ vector<string> get_new_tagfiles() {
     vector<string> newtagfiles = {};
     
     string subtruncstr;
-    if (TRUNCATE_S > 0) {
-        string truncstr = string(3 - to_string(TRUNCATE_S).length(), '0') + to_string(TRUNCATE_S);
+    if (cfg.TRUNCATE_S > 0) {
+        string truncstr = string(3 - to_string(cfg.TRUNCATE_S).length(), '0') + to_string(cfg.TRUNCATE_S);
         subtruncstr = "_trunc"+ truncstr;
     } else {
         subtruncstr = "_trunc000";
@@ -684,33 +645,33 @@ void read_config() {
             auto value = line.substr(delimiterPos + 1);
             
             if (name == "hist_start") {
-                HIST_START = stod(value);
+                cfg.HIST_START = stod(value);
             } else if (name == "hist_stop") {
-                HIST_STOP = stod(value);
+                cfg.HIST_STOP = stod(value);
             } else if (name == "hist_step") {
-                HIST_STEP = stod(value);
+                cfg.HIST_STEP = stod(value);
             } else if (name == "chn_h") {
-                CHN_H = stoi(value);
+                cfg.CHN_H = stoi(value);
             } else if (name == "chn_v") {
-                CHN_V = stoi(value);
+                cfg.CHN_V = stoi(value);
             } else if (name == "chn_tr") {
-                CHN_TR = stoi(value);
+                cfg.CHN_TR = stoi(value);
             } else if (name == "chn_fpga") {
-                CHN_FPGA = stoi(value);
+                cfg.CHN_FPGA = stoi(value);
             } else if (name == "use_fpga") {
-                FPGA_USE = stoi(value);
+                cfg.FPGA_USE = stoi(value);
             } else if (name == "fpga_offset") {
-                FPGA_OFFSET = stod(value);
+                cfg.FPGA_OFFSET = stod(value);
             } else if (name == "fpga_delay_min") {
-                FPGA_DELAY_MIN = stod(value);
+                cfg.FPGA_DELAY_MIN = stod(value);
             } else if (name == "fpga_delay_max") {
-                FPGA_DELAY_MAX = stod(value);
+                cfg.FPGA_DELAY_MAX = stod(value);
             } else if (name == "fpga_hist_step") {
-                FPGA_HIST_STEP = stod(value);
+                cfg.FPGA_HIST_STEP = stod(value);
             } else if (name == "truncate") {
-                TRUNCATE_S = stoi(value);
+                cfg.TRUNCATE_S = stoi(value);
             } else if ("num_threads") {
-                NUM_THREADS = stoi(value);
+                cfg.NUM_THREADS = stoi(value);
             } else {
                 cout << "unknown config name: " << name << endl;
             }
@@ -721,17 +682,17 @@ void read_config() {
     }
 
     cout << "---config---" << endl;
-    cout << "hist_start    : " << HIST_START << "ns" << endl;
-    cout << "hist_stop     : " << HIST_STOP  << "ns" << endl;
-    cout << "hist_step     : " << HIST_STEP  << "ns" << endl;
-    cout << "thigger chn   : " << CHN_TR     << endl;
-    cout << "fpga chn      : " << CHN_FPGA   << endl;
-    cout << "H chn         : " << CHN_H      << endl;
-    cout << "V chn         : " << CHN_V      << endl;
-    cout << "truncate at   : " << TRUNCATE_S << "s" << endl;
-    cout << "use fpga chan : " << FPGA_USE   << endl;
-    cout << "fpga delay min: " << FPGA_DELAY_MIN << "ns" << endl;
-    cout << "fpga delay max: " << FPGA_DELAY_MAX << "ns" << endl;
+    cout << "hist_start    : " << cfg.HIST_START << "ns" << endl;
+    cout << "hist_stop     : " << cfg.HIST_STOP  << "ns" << endl;
+    cout << "hist_step     : " << cfg.HIST_STEP  << "ns" << endl;
+    cout << "thigger chn   : " << cfg.CHN_TR     << endl;
+    cout << "fpga chn      : " << cfg.CHN_FPGA   << endl;
+    cout << "H chn         : " << cfg.CHN_H      << endl;
+    cout << "V chn         : " << cfg.CHN_V      << endl;
+    cout << "truncate at   : " << cfg.TRUNCATE_S << "s" << endl;
+    cout << "use fpga chan : " << cfg.FPGA_USE   << endl;
+    cout << "fpga delay min: " << cfg.FPGA_DELAY_MIN << "ns" << endl;
+    cout << "fpga delay max: " << cfg.FPGA_DELAY_MAX << "ns" << endl;
 
 }
 

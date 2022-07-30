@@ -6,7 +6,6 @@
 #include <bits/stdc++.h>
 #include <sys/stat.h>
 #include <chrono>
-//#include <execution>
 #include <filesystem>
 #include <fstream>
 #include <H5Cpp.h>
@@ -15,7 +14,6 @@
 #include <omp.h>
 #include <string>
 #include <regex>
-// #include <unordered_set>
 #include <vector>
 
 #include "ccset.pb.h"
@@ -24,20 +22,23 @@
 #define PI          3.141592654
 
 // CONFIG VALUES
-double HIST_START = 0;
-double HIST_STOP  = 0;
-double HIST_STEP  = 0.1;
-double FPGA_DELAY_MIN = 0;
-double FPGA_DELAY_MAX = 0;
-double FPGA_HIST_STEP = 0;
-double FPGA_OFFSET = 0;
-int FPGA_USE = 0;
-int CHN_TR = 49;
-int CHN_FPGA = 1;
-int CHN_H = 25;
-int CHN_V = 29;
-int TRUNCATE_S = -1;
-uint16_t NUM_THREADS = 1;
+struct Config {
+    double HIST_START = 0;
+    double HIST_STOP  = 0;
+    double HIST_STEP  = 0.1;
+    double FPGA_DELAY_MIN = 0;
+    double FPGA_DELAY_MAX = 0;
+    double FPGA_HIST_STEP = 0;
+    double FPGA_OFFSET = 0;
+    int FPGA_USE = 0;
+    int CHN_TR = 49;
+    int CHN_FPGA = 1;
+    int CHN_H = 25;
+    int CHN_V = 29;
+    int TRUNCATE_S = -1;
+    uint16_t NUM_THREADS = 1;
+    std::vector<std::vector<uint16_t>> patterns = {};
+} cfg;
 
 double ETA = 0;
 double SPENT_TIME = 0;
