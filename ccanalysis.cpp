@@ -740,10 +740,10 @@ void read_config() {
 */
 std::vector<std::vector<uint16_t>> parse_patterns(std::string s) {
     if (!(s.starts_with("{{"))) {
-        std::cout << "pattern string malformatted" << endl;
+        cout << "pattern string malformatted: " << s << endl;
     }
     if (!(s.ends_with("}}"))) {
-        std::cout << "pattern string malformatted" << endl;
+        cout << "pattern string malformatted: " << s << endl;
     }
     
     s.erase(0,1);
@@ -758,8 +758,6 @@ std::vector<std::vector<uint16_t>> parse_patterns(std::string s) {
     std::vector<uint16_t> pattern = {};
     std::vector<std::vector<uint16_t>> patterns = {};
     std::string channelstr = "";
-    size_t chan_start_idx = 0;
-    size_t chan_stop_idx = 0;
     // separate patterns
     while (vec_stop_idx < s.length()-1) {
         vec_start_idx =  s.find("{", vec_start_idx);
