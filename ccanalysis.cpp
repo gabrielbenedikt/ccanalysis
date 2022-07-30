@@ -170,10 +170,10 @@ void separate_tags_per_channels(const long long* tags, const long long numtags, 
     
     long long maxtag = numtags;
     if (cfg.TRUNCATE_S > 0) {
-        double firsttag = tags[1]*CS;
+        double firsttag = tags[1]*cfg.CS;
         double lasttag = 0;
         for (long long i=2; i<numtags; i+=2) {
-            lasttag = tags[i+1]*CS;
+            lasttag = tags[i+1]*cfg.CS;
             //some tags are zero. this breaks the comparison
             if (lasttag!=0) {
                 if ((lasttag-firsttag)>cfg.TRUNCATE_S*pow(10,9)) {
@@ -187,17 +187,17 @@ void separate_tags_per_channels(const long long* tags, const long long numtags, 
 
     double currtag;
     for (long long i=0; i<maxtag; i+=2) {
-        currtag = tags[i+1]*CS;
+        currtag = tags[i+1]*cfg.CS;
         //some tags are zero. this breaks stuff. exclude them. effing tagger.
         if (currtag!=0) {
             if (tags[i]==cfg.CHN_TR) {
-                cnt_tr.emplace_back(tags[i+1]*CS);
+                cnt_tr.emplace_back(tags[i+1]*cfg.CS);
             } else if (tags[i]==cfg.CHN_H) {
-                cnt_h.emplace_back(tags[i+1]*CS);
+                cnt_h.emplace_back(tags[i+1]*cfg.CS);
             } else if (tags[i]==cfg.CHN_V) {
-                cnt_v.emplace_back(tags[i+1]*CS);
+                cnt_v.emplace_back(tags[i+1]*cfg.CS);
             } else if (tags[i]==cfg.CHN_FPGA) {
-                cnt_fpga.emplace_back(tags[i+1]*CS);
+                cnt_fpga.emplace_back(tags[i+1]*cfg.CS);
             }
         }
     }
@@ -672,6 +672,8 @@ void read_config() {
                 cfg.TRUNCATE_S = stoi(value);
             } else if ("num_threads") {
                 cfg.NUM_THREADS = stoi(value);
+            }else if ("tagger_resolution") {
+                cfg.CS = stod(value);
             } else {
                 cout << "unknown config name: " << name << endl;
             }

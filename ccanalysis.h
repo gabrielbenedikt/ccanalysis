@@ -18,11 +18,11 @@
 
 #include "ccset.pb.h"
 
-#define CS          0.015625        //clockcycle to ns
 #define PI          3.141592654
 
 // CONFIG VALUES
 struct Config {
+    double CS = 0.015625;
     double HIST_START = 0;
     double HIST_STOP  = 0;
     double HIST_STEP  = 0.1;

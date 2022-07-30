@@ -10,3 +10,5 @@ chn_fpga=1
 fpga_delay_min=400
 fpga_delay_max=1200
 truncate=0
+#timetagger resolution in ns
+tagger_resolution=0.015625
