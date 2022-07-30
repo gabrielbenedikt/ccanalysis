@@ -710,7 +710,7 @@ void read_config() {
             } else if (name == "truncate") {
                 TRUNCATE_S = stoi(value);
             } else if ("num_threads") {
-                NUM_STEPS = stoi(value);
+                NUM_THREADS = stoi(value);
             } else {
                 cout << "unknown config name: " << name << endl;
             }

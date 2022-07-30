@@ -14,6 +14,7 @@
 #include <iostream>
 #include <omp.h>
 #include <string>
+#include <regex>
 // #include <unordered_set>
 #include <vector>
 
