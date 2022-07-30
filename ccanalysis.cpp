@@ -701,7 +701,7 @@ void read_config() {
 /********************************************************************************
 *** parse config string containing patternspatterns
 */
-std::vector<std::vector<uint16_t>> parse_patterns(std::string s) {
+std::vector<std::vector<uint16_t>> parse_patterns(const std::string s) {
     if (!(s.starts_with("{{"))) {
         cout << "pattern string malformatted: " << s << endl;
     }
@@ -769,7 +769,7 @@ void print_vector(const std::vector<T> v) {
 *** turn vector of vectors into vector
 */
 template<typename T>
-std::vector<T> flatten(std::vector<std::vector<T>> vv) {
+std::vector<T> flatten(const std::vector<std::vector<T>> vv) {
     std::vector<T> result;
     for (auto v: vv) {
         result.insert(result.end(), v.begin(), v.end());
@@ -781,7 +781,7 @@ std::vector<T> flatten(std::vector<std::vector<T>> vv) {
 *** find unique entries in vector
 */
 template<typename T>
-std::vector<T> unique(std::vector<T> v) {
+std::vector<T> unique(const std::vector<T> v) {
     std::vector<T> result;
     for (auto e: v) {
         if (std::find(result.begin(), result.end(), e) != result.end()) {
