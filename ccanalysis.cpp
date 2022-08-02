@@ -42,14 +42,13 @@ int main(void)
             continue;
         }
 
-        string datasetPath = "/tags/block0_values";
         cout << "file " << nanalyzed << " of " << newtagfiles.size() << ": filename: " << fn << endl;
         
         /*
         * read hdf file
         */
         long long data_len = 0;
-        long long *data = readHDFfile(fn, datasetPath, data_len);
+        long long *data = readHDF5tags(fn, data_len);
         
         /*
         * separate into channels
@@ -108,10 +107,11 @@ int main(void)
 }
 
 /********************************************************************************
-*** read hdf file
+*** read hdf5 tag file
 */
-long long* readHDFfile(const string fn, const string datasetPath, long long& out_data_len)
+long long* readHDF5tags(const string fn, long long& out_data_len)
 {
+    string datasetPath = "/tags/block0_values";
     
     // Open HDF5 file handle, read only
     H5::H5File file(fn.c_str(), H5F_ACC_RDONLY);
@@ -151,6 +151,31 @@ long long* readHDFfile(const string fn, const string datasetPath, long long& out
     return data_out;
 }
 
+std::vector<long long> readTSVtags(const std::string fn, long long& out_data_len)
+{
+    std::ifstream tsvfile(fn);
+    std::string line;
+    std::vector<long long> result;
+    long long value;
+    
+    if (!tsvfile.is_open()) {
+        throw std::runtime_error("Could not open file " + fn);
+    }
+    
+    while (std::getline(tsvfile, line)) {
+        std::stringstream ss(line);
+        while (ss >> value) {
+            result.push_back(value);
+            if(ss.peek() == '\t') {
+                ss.ignore();
+            }
+        }
+    }
+    
+    out_data_len = result.size();
+    
+    return result;
+}
 
 /********************************************************************************
 *** separate tag vectors
@@ -701,7 +726,8 @@ void read_config() {
 /********************************************************************************
 *** parse config string containing patternspatterns
 */
-std::vector<std::vector<uint16_t>> parse_patterns(const std::string s) {
+std::vector<std::vector<uint16_t>> parse_patterns(const std::string instring) {
+    std::string s = instring;
     if (!(s.starts_with("{{"))) {
         cout << "pattern string malformatted: " << s << endl;
     }

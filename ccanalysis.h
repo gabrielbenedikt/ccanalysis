@@ -62,7 +62,8 @@ struct ccstruct {
     double meastime;
 };
 
-long long* readHDFfile(const std::string fn, const std::string dsetpath, long long& out_data_len);
+long long* readHDF5tags(const std::string fn, long long& out_data_len);
+std::vector<long long>  readTSVtags(const std::string fn, long long& out_data_len);
 void separate_tags_per_channels(const long long* tags, const long long numtags, std::vector<double>& out_countst, std::vector<double>& out_countsh, std::vector<double>& out_countsv, std::vector<double>& out_countsfpga);
 
 
@@ -91,6 +92,6 @@ bool stringreplace(std::string& str, const std::string& from, const std::string&
 std::vector<std::string> get_new_tagfiles();
 bool fileExists(const std::string& fn);
 void read_config();
-std::vector<std::vector<uint16_t>> parse_patterns(std::string s);
+std::vector<std::vector<uint16_t>> parse_patterns(std::string instring);
 
 #endif //CCANALYSIS_H
