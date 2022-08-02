@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
-   project(ccanalysis)
+   project(rewinding_ccanalysis)
 
    set(CMAKE_BUILD_TYPE RELEASE)
    
@@ -29,16 +29,17 @@ cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
    find_package(Protobuf REQUIRED)
    find_package(TBB REQUIRED tbb)
 
-   add_executable(ccanalysis ccanalysis.cpp ccset.pb.cc)
-   set_property(TARGET ccanalysis PROPERTY CXX_STANDARD 20)
-   target_link_libraries(ccanalysis ${HDF5_HL_LIBRARIES} ${HDF5_CXX_LIBRARIES} ${HDF5_LIBRARIES} ${PROTOBUF_LIBRARY} ${TBB_IMPORTED_TARGETS} OpenMP::OpenMP_CXX)
-   target_include_directories(ccanalysis PUBLIC ${HDF5_INCLUDE_DIRS})
+   add_executable(rewinding_ccanalysis rewinding_ccanalysis.cpp ccset.pb.cc)
+
+   set_property(TARGET rewinding_ccanalysis PROPERTY CXX_STANDARD 20)
+   target_link_libraries(rewinding_ccanalysis ${HDF5_HL_LIBRARIES} ${HDF5_CXX_LIBRARIES} ${HDF5_LIBRARIES} ${PROTOBUF_LIBRARY} ${TBB_IMPORTED_TARGETS} OpenMP::OpenMP_CXX)
+   target_include_directories(rewinding_ccanalysis PUBLIC ${HDF5_INCLUDE_DIRS})
 
    include(CheckIPOSupported)
    check_ipo_supported(RESULT hasipo OUTPUT error)
    if( hasipo )
       message(STATUS "IPO / LTO enabled")
-      set_property(TARGET ccanalysis PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+      set_property(TARGET rewinding_ccanalysis PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
    else()
       message(STATUS "IPO / LTO not supported: <${error}>")
    endif()
