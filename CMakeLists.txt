@@ -25,21 +25,34 @@ cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
    include_directories(${HDF5_INCLUDE_DIRS})
 
    find_package(HDF5 REQUIRED COMPONENTS C CXX)
+   find_package(Boost 1.74 COMPONENTS program_options REQUIRED)
    find_package(OpenMP REQUIRED)
    find_package(Protobuf REQUIRED)
    find_package(TBB REQUIRED tbb)
 
-   add_executable(rewinding_ccanalysis rewinding_ccanalysis.cpp ccset.pb.cc)
-
+   add_executable(rewinding_ccanalysis rewinding_ccanalysis.cpp ccset.pb.cc tools.cpp io.cpp)
    set_property(TARGET rewinding_ccanalysis PROPERTY CXX_STANDARD 20)
-   target_link_libraries(rewinding_ccanalysis ${HDF5_HL_LIBRARIES} ${HDF5_CXX_LIBRARIES} ${HDF5_LIBRARIES} ${PROTOBUF_LIBRARY} ${TBB_IMPORTED_TARGETS} OpenMP::OpenMP_CXX)
-   target_include_directories(rewinding_ccanalysis PUBLIC ${HDF5_INCLUDE_DIRS})
+   target_link_libraries(rewinding_ccanalysis ${HDF5_HL_LIBRARIES} ${HDF5_CXX_LIBRARIES} ${HDF5_LIBRARIES} ${PROTOBUF_LIBRARY} ${Boost_LIBRARIES} ${TBB_IMPORTED_TARGETS} OpenMP::OpenMP_CXX)
+   target_include_directories(rewinding_ccanalysis PUBLIC ${HDF5_INCLUDE_DIRS} ${Boost_INCLUDE_DIR})
 
+   add_executable(tsv2hdf tsv2hdf.cpp io.cpp tools.cpp)
+   set_property(TARGET tsv2hdf PROPERTY CXX_STANDARD 20)
+   target_link_libraries(tsv2hdf ${HDF5_HL_LIBRARIES} ${HDF5_CXX_LIBRARIES} ${HDF5_LIBRARIES} ${Boost_LIBRARIES} OpenMP::OpenMP_CXX)
+   target_include_directories(tsv2hdf PUBLIC ${HDF5_INCLUDE_DIRS} ${Boost_INCLUDE_DIR})
+   
+   add_executable(hdf2tsv hdf2tsv.cpp io.cpp tools.cpp)
+   set_property(TARGET hdf2tsv PROPERTY CXX_STANDARD 20)
+   target_link_libraries(hdf2tsv ${HDF5_HL_LIBRARIES} ${HDF5_CXX_LIBRARIES} ${HDF5_LIBRARIES} ${Boost_LIBRARIES} OpenMP::OpenMP_CXX)
+   target_include_directories(hdf2tsv PUBLIC ${HDF5_INCLUDE_DIRS} ${Boost_INCLUDE_DIR})
+   
+   
+   
    include(CheckIPOSupported)
    check_ipo_supported(RESULT hasipo OUTPUT error)
    if( hasipo )
       message(STATUS "IPO / LTO enabled")
       set_property(TARGET rewinding_ccanalysis PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+      set_property(TARGET tsv2hdf PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
    else()
       message(STATUS "IPO / LTO not supported: <${error}>")
    endif()

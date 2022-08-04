@@ -4,7 +4,6 @@
 #include <random>
 #include <algorithm>
 #include <bits/stdc++.h>
-#include <sys/stat.h>
 #include <chrono>
 #include <filesystem>
 #include <fstream>
@@ -13,9 +12,10 @@
 #include <iostream>
 #include <omp.h>
 #include <string>
-#include <regex>
 #include <vector>
 
+#include "tools.h"
+#include "io.h"
 #include "ccset.pb.h"
 
 #define PI          3.141592654
@@ -62,8 +62,6 @@ struct ccstruct {
     double meastime;
 };
 
-long long* readHDF5tags(const std::string fn, long long& out_data_len);
-std::vector<long long>  readTSVtags(const std::string fn, long long& out_data_len);
 void separate_tags_per_channels(const long long* tags, const long long numtags, std::vector<double>& out_countst, std::vector<double>& out_countsh, std::vector<double>& out_countsv, std::vector<double>& out_countsfpga);
 
 
@@ -78,20 +76,8 @@ void cc_point_to_ccstruct(const std::vector<cc_point> *pts, ccstruct *ccs);
 int ccstruct_protobuf_todisk(const ccstruct* data, const std::string fname);
 int ccstruct_protobuf_fromdisk(ccstruct* data, const std::string fname);
 
-// helpers
-template<typename T>
-std::vector<T> arange(const T start, const T stop, const T step = 1);
-template<typename T>
-void print_vector(const std::vector<T> v);
-template<typename T>
-std::vector<T> unique(std::vector<T> v);
-template<typename T>
-std::vector<T> flatten(std::vector<std::vector<T>> vv);
-bool stringreplace(std::string& str, const std::string& from, const std::string& to);
 
 std::vector<std::string> get_new_tagfiles();
-bool fileExists(const std::string& fn);
 void read_config();
-std::vector<std::vector<uint16_t>> parse_patterns(std::string instring);
 
 #endif //CCANALYSIS_H
