@@ -16,6 +16,15 @@
 #include "hdf5.h"
 #include "tools.h"
 
+#include <boost/iostreams/filtering_streambuf.hpp>
+#include <boost/iostreams/copy.hpp>
+#include <boost/iostreams/filter/zstd.hpp>
+
+#include "tags.capnp.h"
+#include <capnp/message.h>
+#include <capnp/serialize.h>
+#include <kj/std/iostream.h>
+
 enum HDF5_COMP_ALG {
     HDF5_COMP_ALG_ZLIB = 0,
     HDF5_COMP_ALG_SZIP = 1,
@@ -27,6 +36,7 @@ bool fileExists(const std::string& fn);
 
 void readTSVtags(const std::string fn, std::vector<long long> &result, long long& out_data_len);
 long long* readHDF5tags(const std::string fn, long long& out_data_len);
+std::vector<long long> readcapnptags(const std::string fn, long long& out_data_len);
 
 void lltoTSV(const std::string fn, const long long* data, const long long len);
 void writeHDFtags(const std::string fn, const std::vector<long long> &r, const uint8_t compression_alg=HDF5_COMP_ALG_ZLIB, const uint8_t compression_level=5);

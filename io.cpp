@@ -3,13 +3,60 @@
 /********************************************************************************
 *** check if a file exists
 */
-bool fileExists(const std::string& fn)
-{
+bool fileExists(const std::string& fn){
     struct stat buf;
     if (stat(fn.c_str(), &buf) != -1) {
         return true;
     }
     return false;
+}
+
+/********************************************************************************
+*** read capnp tag file
+*/
+std::vector<long long> readcapnptags(const std::string fn, long long& out_data_len){
+    std::vector<long long> result;
+    ::capnp::ReaderOptions opts;
+    opts.traversalLimitInWords = 1.9 * 1024 * 1024 * 1024 ;
+    if (std::filesystem::path(fn).extension() == ".zst") {
+        std::stringstream ss;
+        std::ifstream input(fn,std::ios_base::in);
+        boost::iostreams::filtering_streambuf<boost::iostreams::input>bins;
+        bins.push(boost::iostreams::zstd_decompressor());
+        bins.push(input);
+        boost::iostreams::copy(bins,ss);
+
+        ::kj::std::StdInputStream stream(ss);
+        ::capnp::InputStreamMessageReader message(stream, opts);
+        
+        Tags::Reader reader = message.getRoot<Tags>();
+        auto tagllist = reader.getTags();
+        
+        for (auto list: tagllist) {
+            for (auto tags: list) {
+                result.emplace_back(tags.getChannel());
+                result.emplace_back(tags.getTime());
+            }
+        }
+    } else {
+        int fd = open(fn.c_str(), O_RDONLY);
+        ::capnp::StreamFdMessageReader message(fd, opts);
+        close(fd);
+        
+        Tags::Reader reader = message.getRoot<Tags>();
+        auto tagllist = reader.getTags();
+        
+        for (auto list: tagllist) {
+            for (auto tags: list) {
+                result.emplace_back(tags.getChannel());
+                result.emplace_back(tags.getTime());
+            }
+        }
+    }
+    
+    out_data_len = result.size();
+    
+    return result;
 }
 
 /********************************************************************************
