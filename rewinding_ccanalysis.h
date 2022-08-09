@@ -7,7 +7,6 @@
 #include <chrono>
 #include <filesystem>
 #include <fstream>
-#include <H5Cpp.h>
 #include <iterator>
 #include <iostream>
 #include <omp.h>
