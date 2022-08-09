@@ -9,6 +9,7 @@
 #include <sstream>
 #include <fstream>
 #include <filesystem>
+#include <fcntl.h>
 #include <exception>
 #include <cassert>
 #include <H5Cpp.h>
