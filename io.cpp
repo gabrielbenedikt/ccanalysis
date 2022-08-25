@@ -63,20 +63,18 @@ std::vector<long long> readcapnptags(const std::string fn, long long& out_data_l
 *** read tsv tag file
 */
 void readTSVtags(const std::string fn, std::vector<long long> &result, long long& out_data_len) {
-    if (FILE *f = fopen(fn.c_str(), "r")) {
-        
-        fseek(f, 0, SEEK_END);
-        long long fsize = ftell(f);
-        fseek(f, 0, SEEK_SET);
-        result.reserve(fsize);
-        
-        const uint16_t MAX_LINESIZE = 256;
-        char line[MAX_LINESIZE];
-        const char *delim = "\t";
-        while(fgets(line, MAX_LINESIZE, f) != NULL) {
-            result.push_back(std::stoll(strtok(line, delim)));
-            result.push_back(std::stoll(strtok(NULL, delim)));;
-        }
+    std::ifstream f(fn);
+    std::stringstream ss;
+    ss << f.rdbuf();    
+    f.close();
+    std::string s;
+    long long int val = 0;
+    while(std::getline(ss,s,'\t')) {
+        std::from_chars(s.data(), s.data()+s.size(), val);
+        result.push_back(val);
+        std::getline(ss,s,'\n');
+        std::from_chars(s.data(), s.data()+s.size(), val);
+        result.push_back(val);
     }
     
     out_data_len = result.size();
