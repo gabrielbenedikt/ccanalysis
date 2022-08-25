@@ -63,11 +63,16 @@ std::vector<long long> readcapnptags(const std::string fn, long long& out_data_l
 *** read tsv tag file
 */
 void readTSVtags(const std::string fn, std::vector<long long> &result, long long& out_data_len) {
+    if (FILE *f = fopen(fn.c_str(), "r")) {
+        fseek(f, 0, SEEK_END);
+        result.reserve(2*ftell(f));
+        fclose(f);
+    }
     std::ifstream f(fn);
     std::stringstream ss;
+    std::string s;
     ss << f.rdbuf();    
     f.close();
-    std::string s;
     long long int val = 0;
     while(std::getline(ss,s,'\t')) {
         std::from_chars(s.data(), s.data()+s.size(), val);
