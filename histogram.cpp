@@ -184,14 +184,17 @@ histogram_onepattern histogram(const std::vector<std::vector<double>>* tags_per_
     std::vector<double> tags_trigger = tags_per_channel->at(std::find(channels->begin(), channels->end(), pattern[0])-channels->begin());
     std::vector<double> tags_idler = tags_per_channel->at(std::find(channels->begin(), channels->end(), pattern[1])-channels->begin());
     std::ranges::for_each(tags_trigger.begin(), tags_trigger.end(), [](double &tt) { tt=round(tt*10)/10; });
+    size_t offset_len = offsets->size();
     
-    histogram_onepattern histogram;
+    histogram_onepattern histogram = {};
     histogram.pattern = pattern;
     histogram.meastime = tags_trigger.back()-tags_trigger.front();
+    histogram.cc.resize(offset_len);
+    histogram.cc_tags.resize(offset_len);
     histogram.offsets = *offsets;
     
     #pragma omp parallel for
-    for(uint i=0; i<offsets->size(); ++i) {
+    for(uint i=0; i<offset_len; ++i) {
         double os = offsets->at(i);
         
         // H
@@ -202,13 +205,37 @@ histogram_onepattern histogram(const std::vector<std::vector<double>>* tags_per_
         std::set_intersection(tags_trigger.begin(), tags_trigger.end(),
                          tmptags.begin(), tmptags.end(),
                          std::back_inserter(cc_tags));
-
         
-        histogram.cc.emplace_back(cc_tags.size());
-        histogram.cc_tags.emplace_back(cc_tags);
-        
+        histogram.cc[i] = cc_tags.size();
+        histogram.cc_tags[i] = cc_tags;
     }
+    
     return histogram;         
+}
+
+void print_histogram_onepattern(histogram_onepattern h) {
+    /*
+    struct histogram_onepattern {
+        std::vector<double> offsets;
+        std::vector<long> cc;
+        std::vector<std::vector<double>> cc_tags;
+        std::vector<uint16_t> pattern;
+        double meastime;
+    };
+    */
+    std::cout << "offsets: \n";
+    for (auto o: h.offsets) 
+        std::cout << o << ", ";
+    std::cout << "\n";
+    std::cout << "coincidences: \n";
+    for (auto c: h.cc) 
+        std::cout << c << ", ";
+    std::cout << "\n";
+    std::cout << "pattern: \n";
+    for (auto c: h.pattern) 
+        std::cout << c << ", ";
+    std::cout << "\n";
+    std::cout << "meastime: " << h.meastime << std::endl;
 }
 
 void histograms_to_struct(const std::vector<histogram_onepattern> *pts, histograms *hs) {

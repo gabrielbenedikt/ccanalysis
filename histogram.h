@@ -64,4 +64,6 @@ int histstruct_protobuf_todisk(const histograms* data, const std::string fname);
 std::vector<std::string> get_new_tagfiles();
 void read_config();
 
+
+void print_histogram_onepattern(histogram_onepattern h);
 #endif // HISTOGRAM_H
