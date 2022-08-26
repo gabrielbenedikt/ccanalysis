@@ -42,7 +42,7 @@ template<typename T>
 std::vector<T> unique(const std::vector<T> v) {
     std::vector<T> result;
     for (auto e: v) {
-        if (std::find(result.begin(), result.end(), e) != result.end()) {
+        if (std::find(result.begin(), result.end(), e) == result.end()) {
             result.push_back(e);
         }
     }
