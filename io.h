@@ -10,6 +10,8 @@
 #include <sstream>
 #include <fstream>
 #include <filesystem>
+#include <fmt/core.h>
+#include <fmt/os.h>
 #include <fcntl.h>
 #include <exception>
 #include <cassert>

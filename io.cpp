@@ -199,9 +199,9 @@ void writeHDFtagsC(const std::string fn, const std::vector<long long> &r, const 
 }
 
 void lltoTSV(const std::string fn, const long long* data, const long long len) {
-    std::ofstream tsvfile(fn);
+    auto tsvfile = fmt::output_file(fn, fmt::buffer_size=262144);
     for (long long i = 0; i<len-1; i+=2) {
-        tsvfile << data[i] << "\t" << data[i+1] << "\n";
+        tsvfile.print("{0}\t{1}\n", data[i], data[i+1]);
     }
 }
 
