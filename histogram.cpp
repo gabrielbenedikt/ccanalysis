@@ -131,7 +131,6 @@ void separate_tags_per_channels(const long long* tags, const long long numtags, 
         }
     }
 
-
     double currtag;
     for (long long i=0; i<maxtag; i+=2) {
         currtag = tags[i+1]*cfg.CS;
@@ -145,7 +144,6 @@ void separate_tags_per_channels(const long long* tags, const long long numtags, 
         }
     }
 
-    
     /* make sure tags are ordered
      * 
      * may be more efficient if you do it directly on long long* tags, but doing it on the std::vectors is easier to write.
@@ -182,7 +180,7 @@ void separate_tags_per_channels(const long long* tags, const long long numtags, 
 /********************************************************************************
 *** find coincidences - set inersect
 */
-histogram_onepattern histogram(const std::vector<std::vector<double>>* tags_per_channel, const std::vector<uint16_t>* channels, const std::vector<double>* offsets, const std::vector<uint16_t> pattern) { 
+histogram_onepattern histogram(const std::vector<std::vector<double>>* tags_per_channel, const std::vector<uint16_t>* channels, const std::vector<double>* offsets, const std::vector<uint16_t> pattern) {
     std::vector<double> tags_trigger = tags_per_channel->at(std::find(channels->begin(), channels->end(), pattern[0])-channels->begin());
     std::vector<double> tags_idler = tags_per_channel->at(std::find(channels->begin(), channels->end(), pattern[1])-channels->begin());
     std::ranges::for_each(tags_trigger.begin(), tags_trigger.end(), [](double &tt) { tt=round(tt*10)/10; });
@@ -349,9 +347,9 @@ void read_config() {
                 cfg.TRUNCATE_S = stoi(value);
             } else if (name == "patterns") {
                 cfg.patterns = parse_patterns(value);
-            }else if ("num_threads") {
+            } else if (name == "num_threads") {
                 cfg.NUM_THREADS = stoi(value);
-            }else if ("tagger_resolution") {
+            } else if (name == "tagger_resolution") {
                 cfg.CS = stod(value);
             } else {
                 std::cout << "unknown config name: " << name << std::endl;
@@ -368,8 +366,9 @@ void read_config() {
     std::cout << "hist_step     : " << cfg.HIST_STEP  << "ns\n";
     std::cout << "truncate at   : " << cfg.TRUNCATE_S << "s\n";
     std::cout << "patterns:     : " << std::endl;
+    std::cout << "tag resolution: " << cfg.CS           << "\n";
+    std::cout << "# threads     : " << cfg.NUM_THREADS  << "\n";
     for (auto e: cfg.patterns) {
         print_vector(e);
     }
-
 }
