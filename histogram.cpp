@@ -62,14 +62,13 @@ int main(void)
             continue;
         }
         
-        
         //get all channels in patterns
         std::vector<uint16_t> channels = unique(flatten(cfg.patterns));
         std::vector<std::vector<double>> tags_per_channel = {};
+        
         /*
         * separate into channels
         */
-        
         separate_tags_per_channels(data, data_len, tags_per_channel, channels);
         
         /*
@@ -98,8 +97,6 @@ int main(void)
         delete[] data;
     }
     
-    std::cout << "done" << std::endl;
-    
     return 0;
 }
 
@@ -109,7 +106,6 @@ int main(void)
 */
 void separate_tags_per_channels(const long long* tags, const long long numtags, std::vector<std::vector<double>>& tags_per_channel, const std::vector<uint16_t> channels) 
 {   
-    //TODO
     for (size_t i = 0; i<channels.size(); ++i) {
         tags_per_channel.emplace_back(std::vector<double>());
     }
@@ -174,8 +170,6 @@ void separate_tags_per_channels(const long long* tags, const long long numtags, 
     } // else same sign, thus no tag jump
 }
 
-
-
 /********************************************************************************
 *** find coincidences - set inersect
 */
@@ -210,31 +204,6 @@ histogram_onepattern histogram(const std::vector<std::vector<double>>* tags_per_
     }
     
     return histogram;         
-}
-
-void print_histogram_onepattern(histogram_onepattern h) {
-    /*
-    struct histogram_onepattern {
-        std::vector<double> offsets;
-        std::vector<long> cc;
-        std::vector<std::vector<double>> cc_tags;
-        std::vector<uint16_t> pattern;
-        double meastime;
-    };
-    */
-    std::cout << "offsets: \n";
-    for (auto o: h.offsets) 
-        std::cout << o << ", ";
-    std::cout << "\n";
-    std::cout << "coincidences: \n";
-    for (auto c: h.cc) 
-        std::cout << c << ", ";
-    std::cout << "\n";
-    std::cout << "pattern: \n";
-    for (auto c: h.pattern) 
-        std::cout << c << ", ";
-    std::cout << "\n";
-    std::cout << "meastime: " << h.meastime << std::endl;
 }
 
 void histograms_to_struct(const std::vector<histogram_onepattern> *pts, histograms *hs) {
@@ -272,18 +241,14 @@ int histstruct_protobuf_todisk(const histograms* data, const std::string fname) 
                     cc_tags->add_arr(data->cc_tags[i][j][k]);
             }
         }
-        
     }
     
-    
-    {
-        std::fstream ofs(fname, std::ios::out | std::ios::trunc | std::ios::binary);
-        if (!hdat.SerializeToOstream(&ofs)) {
-            std::cerr << "Failed to write." << std::endl;
-            return -1;
-        }
-        ofs.close();
+    std::fstream ofs(fname, std::ios::out | std::ios::trunc | std::ios::binary);
+    if (!hdat.SerializeToOstream(&ofs)) {
+        std::cerr << "Failed to write." << std::endl;
+        return -1;
     }
+    ofs.close();
     
     return 0;
 }
@@ -341,8 +306,6 @@ std::vector<std::string> get_new_tagfiles() {
                 ++it;
             }
         }
-        
-//         newtagfiles.erase(remove(newtagfiles.begin(), newtagfiles.end(), "tomos.h5"), newtagfiles.end());
         
         return newtagfiles;
     }
