@@ -85,7 +85,6 @@ int main(void)
         histograms_to_struct(&histvec, &allhistograms);
         // save analysis to disk
         histstruct_protobuf_todisk(&allhistograms, savefname);
-
         
         // how much time did analysis take? give eta for all files
         auto endtime = std::chrono::high_resolution_clock::now();
@@ -269,10 +268,11 @@ int histstruct_protobuf_todisk(const histograms* data, const std::string fname) 
         }
         for (size_t j = 0; j<data->cc_tags[i].size(); ++j) {
             histogramset::histograms::darr* cc_tags = cc_tags_vec->add_arr();
-            for (size_t k = 0; data->cc_tags[i][j].size(); ++k) {
-                cc_tags->add_arr(data->cc_tags[i][j][k]);
+            for (size_t k = 0; k<data->cc_tags[i][j].size(); ++k) {
+                    cc_tags->add_arr(data->cc_tags[i][j][k]);
             }
         }
+        
     }
     
     
@@ -392,9 +392,9 @@ void read_config() {
     std::cout << "hist_stop     : " << cfg.HIST_STOP  << "ns\n";
     std::cout << "hist_step     : " << cfg.HIST_STEP  << "ns\n";
     std::cout << "truncate at   : " << cfg.TRUNCATE_S << "s\n";
-    std::cout << "patterns:     : " << std::endl;
     std::cout << "tag resolution: " << cfg.CS           << "\n";
     std::cout << "# threads     : " << cfg.NUM_THREADS  << "\n";
+    std::cout << "patterns:     : " << std::endl;
     for (auto e: cfg.patterns) {
         print_vector(e);
     }
