@@ -8,7 +8,7 @@ int main(void)
     
     std::vector<std::string> newtagfiles = get_new_tagfiles();
 
-    //when multiple workers are iterating over the vector, this will prevent them from doing the same thing
+    //when multiple workers are iterating over the vector, this will prevent them from analyzing the same file
     std::random_device rd;
     std::mt19937 g(rd());
     std::ranges::shuffle ( newtagfiles, g);
@@ -27,7 +27,7 @@ int main(void)
         } else {
             newext = "_trunc000_ccs.pbdat";
         }
-        stringreplace(savefname,".h5", newext);
+        stringreplace(savefname,std::filesystem::path(savefname).extension(), newext);
 
         if (fileExists(savefname)) {
             std::cout << "file seems to have been already analyzed after list of datafiles was composed: \n";
