@@ -19,15 +19,15 @@
 
 // CONFIG VALUES
 struct Config {
-    double CS = 0.015625;                               // tag resolution in ns
+    double CS            = 0.015625;                    // tag resolution in ns
     long long HIST_START = 0;                           // start delay for histogram creation. in terms of tag resolution
     long long HIST_STOP  = 0;                           // stop delay for histogram creation. in terms of tag resolution
     long long HIST_STEP  = 1;                           // granularity of histogram. in terms of tag resolution
-    int TRUNCATE_S = -1;                                // truncate data after TRUNCATE_S seconds
+    uint64_t TRUNCATE_S  = 0;                           // truncate data after TRUNCATE_S seconds
     uint16_t NUM_THREADS = 1;                           // number of threads the coincidence analysis uses
-    uint64_t WND;                                       // coincidence window in terms of tag resolution
+    uint64_t WND         = 1;                           // coincidence window in terms of tag resolution
     std::vector<std::vector<uint16_t>> patterns = {};   // vector of coincidence patterns, themselves in vector form
-} cfg;
+};
 
 struct histogram_onepattern {
     std::vector<long long> offsets;
@@ -45,7 +45,7 @@ struct histograms {
     std::vector<double> meastime;
 };
 
-void separate_tags_per_channels(const long long* tags, const long long numtags, std::vector<std::vector<long long>>& tags_per_channel, const std::vector<uint16_t> channels);
+void separate_tags_per_channels(const long long* tags, const long long numtags, std::vector<std::vector<long long>>& tags_per_channel, const std::vector<uint16_t> channels, const Config& cfg);
 
 // set intersect
 histogram_onepattern histogram(const std::vector<std::vector<long long>>* tags_per_channel, const std::vector<uint16_t>* channels, const std::vector<long long>* offsets, const std::vector<uint16_t> pattern);  
@@ -53,8 +53,8 @@ histogram_onepattern histogram(const std::vector<std::vector<long long>>* tags_p
 void histograms_to_struct(const std::vector<histogram_onepattern> *pts, histograms *hs);
 int histstruct_protobuf_todisk(const histograms* data, const std::string fname);
 
-std::vector<std::string> get_new_tagfiles();
-void read_config();
+std::vector<std::string> get_new_tagfiles(const Config& cfg);
+Config read_config();
 
 
 void print_histogram_onepattern(histogram_onepattern h);

@@ -5,11 +5,11 @@ int main(void)
     double ETA = 0;
     double SPENT_TIME = 0;
     
-    read_config();
+    Config cfg = read_config();
 
     omp_set_num_threads(cfg.NUM_THREADS);
     
-    std::vector<std::string> newtagfiles = get_new_tagfiles();
+    std::vector<std::string> newtagfiles = get_new_tagfiles(cfg);
 
     //when multiple workers are iterating over the vector, this will prevent them from analyzing the same file
     std::random_device rd;
@@ -72,7 +72,7 @@ int main(void)
         /*
         * separate into channels
         */
-        separate_tags_per_channels(data, data_len, tags_per_channel, channels);
+        separate_tags_per_channels(data, data_len, tags_per_channel, channels, cfg);
         
         /*
         * create histogram
@@ -107,7 +107,7 @@ int main(void)
 /********************************************************************************
 *** separate tag vectors
 */
-void separate_tags_per_channels(const long long* tags, const long long numtags, std::vector<std::vector<long long>>& tags_per_channel, const std::vector<uint16_t> channels) 
+void separate_tags_per_channels(const long long* tags, const long long numtags, std::vector<std::vector<long long>>& tags_per_channel, const std::vector<uint16_t> channels, const Config& cfg) 
 {   
     for (size_t i = 0; i<channels.size(); ++i) {
         tags_per_channel.emplace_back(std::vector<long long>());
@@ -121,7 +121,7 @@ void separate_tags_per_channels(const long long* tags, const long long numtags, 
             lasttag = tags[i+1];
             //some tags are zero. this breaks the comparison
             if (lasttag!=0) {
-                if ((lasttag-firsttag)>cfg.TRUNCATE_S*pow(10,9)) {
+                if ((lasttag-firsttag)>cfg.TRUNCATE_S*cfg.CS*pow(10,9)) {
                     maxtag = i;
                     break;
                 }
@@ -259,7 +259,7 @@ int histstruct_protobuf_todisk(const histograms* data, const std::string fname) 
 /********************************************************************************
 *** find new tagfiles
 */
-std::vector<std::string> get_new_tagfiles() {
+std::vector<std::string> get_new_tagfiles(const Config& cfg) {
     std::string path = std::filesystem::current_path();
     std::vector<std::string> alltagfiles = {};
     std::vector<std::string> analyzedfiles = {};
@@ -316,7 +316,8 @@ std::vector<std::string> get_new_tagfiles() {
 /********************************************************************************
 *** read config file
 */
-void read_config() {
+Config read_config() {
+    Config cfg;
     std::ifstream cfgf("histogram.cfg");
     if (cfgf.is_open()) {
         std::string line;
@@ -336,7 +337,7 @@ void read_config() {
             } else if (name == "hist_step") {
                 cfg.HIST_STEP = stod(value);
             } else if (name == "truncate") {
-                cfg.TRUNCATE_S = stoi(value);
+                cfg.TRUNCATE_S = stoul(value);
             } else if (name == "patterns") {
                 cfg.patterns = parse_patterns(value);
             } else if (name == "num_threads") {
@@ -366,4 +367,6 @@ void read_config() {
     for (auto e: cfg.patterns) {
         print_vector(e);
     }
+    
+    return cfg;
 }
