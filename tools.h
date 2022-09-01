@@ -52,7 +52,7 @@ std::vector<T> unique(const std::vector<T> v) {
 /********************************************************************************
 *** create vector holding range of values
 */
-template<class T, std::enable_if<std::is_floating_point<T>::value>::type...>
+template<class T, typename std::enable_if<std::is_floating_point<T>::value>::type...>
 std::vector<T> arange(const T start, const T stop, const T step) {
     std::vector<T> values;
     for (T value = start; value < stop; value += step)
@@ -60,7 +60,7 @@ std::vector<T> arange(const T start, const T stop, const T step) {
     return values;
 }
 
-template<class T, std::enable_if<std::is_integral<T>::value>::type...>
+template<class T, typename std::enable_if<std::is_integral<T>::value>::type...>
 std::vector<T> arange(const T start, const T stop, const T step) {
     std::vector<T> values;
     for (T value = start; value < stop; value += step)
