@@ -68,4 +68,30 @@ std::vector<T> arange(const T start, const T stop, const T step) {
     return values;
 }
 
+template<class T>
+requires std::integral<T>
+T roundto(const T num, const T to)
+{
+    if (to == 0) {
+        return num;
+    }
+    T r = abs(num) % to;
+    if (r == 0) {
+        return num;
+    }
+    if (num < 0) {
+        if (2*r > to) {
+            return num + r - to;
+        } else {
+            return num + r;
+        }
+    } else {
+        if (2*r > to) {
+            return num - r + to;
+        } else {
+            return num - r;
+        }
+    }
+}
+
 #endif //TOOLS_H

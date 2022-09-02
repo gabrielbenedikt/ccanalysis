@@ -80,11 +80,11 @@ int main(void)
         std::vector<long long> offsets = arange<long long>(cfg.HIST_START,cfg.HIST_STOP,cfg.HIST_STEP);
         std::vector<histogram_onepattern> histvec = {};
         for (auto p : cfg.patterns) {
-            histogram_onepattern hist = histogram(&tags_per_channel, &channels, &offsets, p);
+            histogram_onepattern hist = histogram(&tags_per_channel, &channels, &offsets, p, cfg.HIST_STEP);
             histvec.push_back(hist);
         }
         histograms allhistograms;
-        histograms_to_struct(&histvec, &allhistograms);
+        histograms_to_struct(&histvec, &allhistograms, cfg);
         // save analysis to disk
         histstruct_protobuf_todisk(&allhistograms, savefname);
         
@@ -121,7 +121,7 @@ void separate_tags_per_channels(const long long* tags, const long long numtags, 
             lasttag = tags[i+1];
             //some tags are zero. this breaks the comparison
             if (lasttag!=0) {
-                if ((lasttag-firsttag)>cfg.TRUNCATE_S*cfg.CS*pow(10,9)) {
+                if ((lasttag-firsttag)*cfg.CS*pow(10,9)>cfg.TRUNCATE_S) {
                     maxtag = i;
                     break;
                 }
@@ -176,9 +176,11 @@ void separate_tags_per_channels(const long long* tags, const long long numtags, 
 /********************************************************************************
 *** find coincidences - set inersect
 */
-histogram_onepattern histogram(const std::vector<std::vector<long long>>* tags_per_channel, const std::vector<uint16_t>* channels, const std::vector<long long>* offsets, const std::vector<uint16_t> pattern) {
+histogram_onepattern histogram(const std::vector<std::vector<long long>>* tags_per_channel, const std::vector<uint16_t>* channels, const std::vector<long long>* offsets, const std::vector<uint16_t> pattern, const long long wnd) {
     std::vector<long long> tags_trigger = tags_per_channel->at(std::find(channels->begin(), channels->end(), pattern[0])-channels->begin());
     std::vector<long long> tags_idler = tags_per_channel->at(std::find(channels->begin(), channels->end(), pattern[1])-channels->begin());
+    std::ranges::for_each(tags_trigger.begin(), tags_trigger.end(), [&wnd](long long &tt) { tt=roundto(tt, wnd); });
+
     size_t offset_len = offsets->size();
     
     histogram_onepattern histogram = {};
@@ -194,7 +196,7 @@ histogram_onepattern histogram(const std::vector<std::vector<long long>>* tags_p
         
         // H
         std::vector<long long> tmptags = tags_idler;
-        std::ranges::for_each(tmptags.begin(), tmptags.end(), [&os](long long &ht) { ht=ht-os; });
+        std::ranges::for_each(tmptags.begin(), tmptags.end(), [&os, &wnd](long long &ht) { ht=roundto(ht-os,wnd); });
         std::vector<long long> cc_tags = {};
         cc_tags.reserve(4096);
         std::set_intersection(tags_trigger.begin(), tags_trigger.end(),
@@ -208,7 +210,7 @@ histogram_onepattern histogram(const std::vector<std::vector<long long>>* tags_p
     return histogram;         
 }
 
-void histograms_to_struct(const std::vector<histogram_onepattern> *pts, histograms *hs) {
+void histograms_to_struct(const std::vector<histogram_onepattern> *pts, histograms *hs, Config& cfg) {
     for (auto h: *pts) {
         hs->offsets.emplace_back(h.offsets);
         hs->cc.emplace_back(h.cc);
@@ -216,6 +218,7 @@ void histograms_to_struct(const std::vector<histogram_onepattern> *pts, histogra
         hs->pattern.emplace_back(h.pattern);
         hs->meastime.emplace_back(h.meastime);
     }
+    hs->resolution = cfg.HIST_STEP;
 }
 
 int histstruct_protobuf_todisk(const histograms* data, const std::string fname) {
@@ -344,8 +347,6 @@ Config read_config() {
                 cfg.NUM_THREADS = stoi(value);
             } else if (name == "tagger_resolution") {
                 cfg.CS = stod(value);
-            } else if (name == "window") {
-                cfg.WND = stoull(value);
             } else {
                 std::cout << "unknown config name: " << name << std::endl;
             }
@@ -356,13 +357,12 @@ Config read_config() {
     }
 
     std::cout << "---config---\n";
-    std::cout << "hist_start    : " << cfg.HIST_START << "ns\n";
-    std::cout << "hist_stop     : " << cfg.HIST_STOP  << "ns\n";
-    std::cout << "hist_step     : " << cfg.HIST_STEP  << "ns\n";
-    std::cout << "window        : " << cfg.WND  << "ns\n";
+    std::cout << "hist_start    : " << cfg.HIST_START << "cs\n";
+    std::cout << "hist_stop     : " << cfg.HIST_STOP  << "cs\n";
+    std::cout << "hist_step     : " << cfg.HIST_STEP  << "cs\n";
     std::cout << "truncate at   : " << cfg.TRUNCATE_S << "s\n";
-    std::cout << "tag resolution: " << cfg.CS           << "\n";
-    std::cout << "# threads     : " << cfg.NUM_THREADS  << "\n";
+    std::cout << "tag resolution: " << cfg.CS         << "ns\n";
+    std::cout << "# threads     : " << cfg.NUM_THREADS<< "\n";
     std::cout << "patterns:     : " << std::endl;
     for (auto e: cfg.patterns) {
         print_vector(e);
