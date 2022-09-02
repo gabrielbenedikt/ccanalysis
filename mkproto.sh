@@ -1,2 +1,2 @@
-protoc ccset.proto --cpp_out=. --python_out=.
-protoc histogramset.proto --cpp_out=. --python_out=.
+protoc schemes/ccset.proto --cpp_out=./src --python_out=./src
+protoc schemes/histogramset.proto --cpp_out=./src --python_out=./src
