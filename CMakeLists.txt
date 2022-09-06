@@ -27,13 +27,10 @@ cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
    endif()
    
    file(GLOB SOURCES src/*.cpp src/*.cc)
-   file(GLOB REWINDING_SOURCES src/rewinding_ccanalysis.cpp src/ccset.pb.cc src/tools.cpp src/io.cpp ${CAPNP_SRCS})
-   file(GLOB HISTOGRAM_SOURCES src/histogram.cpp src/histogramset.pb.cc src/ccset.pb.cc src/tools.cpp src/io.cpp ${CAPNP_SRCS})
+   file(GLOB REWINDING_SOURCES src/rewinding_ccanalysis.cpp src/schemes/ccset.pb.cc src/tools.cpp src/io.cpp ${CAPNP_SRCS})
+   file(GLOB HISTOGRAM_SOURCES src/histogram.cpp src/schemes/histogramset.pb.cc src/schemes/ccset.pb.cc src/tools.cpp src/io.cpp ${CAPNP_SRCS})
    file(GLOB TSV2HDF_SOURCES src/tsv2hdf.cpp src/io.cpp src/tools.cpp ${CAPNP_SRCS})
    file(GLOB HDF2TSV_SOURCES src/hdf2tsv.cpp src/io.cpp src/tools.cpp ${CAPNP_SRCS})
-   
-   include_directories(${HDF5_INCLUDE_DIRS})
-
    find_package(HDF5 REQUIRED COMPONENTS C CXX)
    find_package(Boost 1.70 COMPONENTS program_options iostreams REQUIRED)
    find_package(OpenMP REQUIRED)
@@ -43,6 +40,8 @@ cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
    
    set(CAPNPC_OUTPUT_DIR ${CMAKE_CURRENT_LIST_DIR}/src)
    capnp_generate_cpp(CAPNP_SRCS CAPNP_HDRS schemes/tags.capnp)
+   include_directories(${HDF5_INCLUDE_DIRS})
+   include_directories("src/schemes")
    
    add_executable(histogram ${HISTOGRAM_SOURCES})
    set_property(TARGET histogram PROPERTY CXX_STANDARD 20)

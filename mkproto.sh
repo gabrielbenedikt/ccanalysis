@@ -1,2 +1,3 @@
-protoc schemes/ccset.proto --cpp_out=./src --python_out=./src
-protoc schemes/histogramset.proto --cpp_out=./src --python_out=./src
+protoc -I=./schemes --cpp_out=./src/schemes --python_out=./src/schemes ./schemes/ccset.proto
+protoc -I=./schemes --cpp_out=./src/schemes --python_out=./src/schemes ./schemes/histogramset.proto
+capnp compile -oc++:src schemes/tags.capnp
