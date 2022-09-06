@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package histogramset;
+
+message histograms {
+    message repi64arr {
+        repeated i64arr arr = 1;
+    }
+    message i64arr {
+        repeated int64 arr = 1;
+    }
+    message u32arr {
+        repeated uint32 arr = 1;
+    }
+    
+    repeated i64arr offsets = 1;
+    repeated i64arr cc = 2;
+    repeated repi64arr cc_tags = 3;
+    repeated u32arr pattern = 4;
+    repeated double meastime = 5;
+}
