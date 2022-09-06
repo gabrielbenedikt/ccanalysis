@@ -34,12 +34,7 @@ truncate=n
 patterns
 : List of coincidence patterns for which histograms will be created. Each pattern itself is a list of two channel numbers  
 
-
-## rewinding_ccanalysis
-Project specific binary. Won't be usefull for you
-Expects HDF5 files as created by the scripts/txttohdf.py script, which itself expects "tab separated values" (TSV) files as created by the UQDevices timetagger.  
-Creates protobuf files that are easily readable by python.  
-
+# Plot histogram
 See scripts/histogram.py for example usage in python.
 
 # How to build
