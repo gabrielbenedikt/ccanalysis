@@ -1,6 +1,8 @@
 #include "histogram.h"
 
-int main(void)
+namespace bpo = boost::program_options;
+
+int main(int argc, char **argv)
 {   
     double ETA = 0;
     double SPENT_TIME = 0;
@@ -9,7 +11,52 @@ int main(void)
 
     omp_set_num_threads(cfg.NUM_THREADS);
     
-    std::vector<std::string> newtagfiles = get_new_tagfiles(cfg);
+    /*
+     * get files from prompt
+     */
+    std::vector<std::string> newtagfiles;
+    try {
+        bpo::options_description args("Arguments");
+        args.add_options()
+            ("input-files", bpo::value<std::vector<std::string>>(), "TSV files to convert")
+            ;
+        bpo::options_description cmdline_options;
+        cmdline_options.add(args);
+        bpo::positional_options_description p;
+        p.add("input-files", -1);
+        
+        bpo::variables_map vm;
+        store(bpo::command_line_parser(argc, argv).
+              options(cmdline_options).positional(p).run(), vm);
+        notify(vm);
+        
+        if (vm.count("help")) {
+            std::cout << "Usage: ./histogram  input-files\n";
+            std::cout << "creates histograms from tagfiles.\n";
+            std::cout << args << "\n";
+            return 0;
+        }
+
+        if (vm.count("input-files")) {
+            newtagfiles = vm["input-files"].as< std::vector<std::string> >();
+        } else {
+            std::cout << "no input files specified.\n";
+            return 1;
+        }
+        
+    }
+    catch(std::exception& e) {
+        std::cerr << "error: " << e.what() << "\n";
+        return 1;
+    }
+    catch(...) {
+        std::cerr << "Exception of unknown type!\n";
+        return 1;
+    }
+    
+    if (newtagfiles.empty()){
+        newtagfiles = get_new_tagfiles(cfg);
+    }
 
     //when multiple workers are iterating over the vector, this will prevent them from analyzing the same file
     std::random_device rd;
@@ -133,6 +180,7 @@ void separate_tags_per_channels(const long long* tags, const long long numtags, 
     for (long long i=0; i<maxtag; i+=2) {
         currtag = tags[i+1];
         //some tags are zero. this breaks stuff. exclude them. effing tagger.
+        std::cout << currtag << std::endl;
         if (currtag!=0) {
             auto it = std::find(channels.begin(), channels.end(), tags[i]);
             if (it != channels.end()) {
