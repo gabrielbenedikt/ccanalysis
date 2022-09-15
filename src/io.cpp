@@ -27,30 +27,55 @@ std::vector<long long> readcapnptags(const std::string fn, long long& out_data_l
         boost::iostreams::copy(bins,ss);
 
         ::kj::std::StdInputStream stream(ss);
-        ::capnp::InputStreamMessageReader message(stream, opts);
-        
-        Tags::Reader reader = message.getRoot<Tags>();
-        auto tagllist = reader.getTags();
-        
-        for (auto list: tagllist) {
-            for (auto tags: list) {
-                result.emplace_back(tags.getChannel());
-                result.emplace_back(tags.getTime());
+        try {
+            while (true) {
+                ::capnp::InputStreamMessageReader message(stream, opts);
+                
+                Tags::Reader reader = message.getRoot<Tags>();
+                auto tagllist = reader.getTags();
+                
+                for (auto list: tagllist) {
+                    for (auto tags: list) {
+                        result.emplace_back(tags.getChannel());
+                        result.emplace_back(tags.getTime());
+                    }
+                }
             }
+        } catch (::kj::Exception &kje) {
+            if (int(kje.getType())==0) {
+                //expected EOF
+            } else {
+                std::cout << "kj exception of type " << int(kje.getType()) << std::endl;
+                std::cout << std::string(kje.getDescription()) << std::endl;
+            }
+        } catch (std::exception &se) {
+            std::cout << se.what() << std::endl;
         }
     } else {
         int fd = open(fn.c_str(), O_RDONLY);
-        ::capnp::StreamFdMessageReader message(fd, opts);
-        close(fd);
         
-        Tags::Reader reader = message.getRoot<Tags>();
-        auto tagllist = reader.getTags();
-        
-        for (auto list: tagllist) {
-            for (auto tags: list) {
-                result.emplace_back(tags.getChannel());
-                result.emplace_back(tags.getTime());
+        try {
+            while (true) {
+                ::capnp::StreamFdMessageReader message(fd, opts);
+                Tags::Reader reader = message.getRoot<Tags>();
+                auto tagllist = reader.getTags();
+                for (auto list: tagllist) {
+                    for (auto tags: list) {
+                        result.emplace_back(tags.getChannel());
+                        result.emplace_back(tags.getTime());
+                    }
+                }
             }
+            close(fd);
+        } catch (::kj::Exception &kje) {
+            if (int(kje.getType())==0) {
+                //expected EOF
+            } else {
+                std::cout << "kj exception of type " << int(kje.getType()) << std::endl;
+                std::cout << std::string(kje.getDescription()) << std::endl;
+            }
+        } catch (std::exception &se) {
+            std::cout << se.what() << std::endl;
         }
     }
     
