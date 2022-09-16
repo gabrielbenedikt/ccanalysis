@@ -1,11 +1,12 @@
 # several tools to process timetag data
 
-## tsv2hdf 
+## tsv2hdf / hdf2tsv
 Convert TSV (tag separated value) files to HDF5.  
 HDF5 dataset paths are set in a way to ensure one-way compatibility with how pandas writes HDF5 files (pandas won't be able to read files created by this application. But other applications in this repo are compatible with HDF5 files created by pandas)
 
-## hdf2tsv
-The other way round.
+## tsv2cap / cap2tsv
+Convert TSV (tag separated value) files to Cap'n'Proto messages as defined in **../schemes/tags.capnp**.  
+Output is optionally zstandard-compressed.
 
 ## histogram
 Reads TSV, HDF5, (zstandard compressed) Cap'n'Proto files and creates coincidence histograms.  
@@ -35,7 +36,7 @@ patterns
 : List of coincidence patterns for which histograms will be created. Each pattern itself is a list of two channel numbers  
 
 # Plot histogram
-See scripts/histogram.py for example usage in python.
+See scripts/plothistogram.py for example usage in python.
 
 # How to build
 
@@ -46,6 +47,7 @@ See scripts/histogram.py for example usage in python.
 - CapnProto
 - fmtlib
 
+## build
 mkdir build  
 cd build  
 cmake ..  
