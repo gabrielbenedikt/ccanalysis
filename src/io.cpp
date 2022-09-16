@@ -279,14 +279,14 @@ void writeHDFtagsC(const std::string fn, const std::vector<long long> &r, const 
     H5Fclose(file_id);
 }
 
-void lltoTSV(const std::string fn, const long long* data, const long long len) {
+void lltoTSV(const std::string fn, const std::vector<long long> &data, const long long len) {
     auto tsvfile = fmt::output_file(fn, fmt::buffer_size=262144);
     for (long long i = 0; i<len-1; i+=2) {
         tsvfile.print("{0}\t{1}\n", data[i], data[i+1]);
     }
 }
 
-long long* readHDF5tags(const std::string fn, long long& out_data_len)
+void readHDF5tags(const std::string fn, std::vector<long long>& result, long long& out_data_len)
 {
     std::string datasetPath = "/tags/block0_values";
     H5::H5File file(fn.c_str(), H5F_ACC_RDONLY);
@@ -306,12 +306,12 @@ long long* readHDF5tags(const std::string fn, long long& out_data_len)
     
     // read
     long long* data_out = new long long[NX*NY];
+    
     out_data_len = NX*NY;
     dataset.read( data_out, H5::PredType::NATIVE_LLONG);
-    
+    result = std::vector<long long>(data_out, data_out+out_data_len);
     file.close();
-    
-    return data_out;
+    delete[] data_out;
 }
 
 

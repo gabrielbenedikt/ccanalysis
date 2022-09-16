@@ -66,7 +66,8 @@ int main(int argc, char **argv) {
         stringreplace(fn_tsv, std::filesystem::path(fn).extension(), ".txt");
         std::cout << fn << "\treading..." << std::flush;
         long long hdf_len = 0;
-        long long* data = readHDF5tags(fn, hdf_len);
+        std::vector<long long> data;
+        readHDF5tags(fn, data, hdf_len);
         std::cout << "ok\twriting..." << std::flush;
         lltoTSV(fn_tsv, data, hdf_len);
         auto endtime = std::chrono::high_resolution_clock::now();

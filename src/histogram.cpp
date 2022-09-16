@@ -94,23 +94,15 @@ int main(int argc, char **argv)
         /*
         * read tag file
         */
-        std::vector<long long> r;
+        std::vector<long long> data;
         long long data_len = 0;
-        long long *data;
-        bool dodelete = false;
-        
         
         if ((std::filesystem::path(fn).extension() == ".h5")) {
-            data = readHDF5tags(fn, data_len);
-            dodelete=true;
+            readHDF5tags(fn, data, data_len);
         } else if ((std::filesystem::path(fn).extension() == ".txt") || (std::filesystem::path(fn).extension() == ".tsv")) {
-            readTSVtags(fn, r, data_len);
-            data = r.data();
-            dodelete=false;
+            readTSVtags(fn, data, data_len);
         } else if ((std::filesystem::path(fn).extension() == ".tags") || (std::filesystem::path(fn).extension() == ".zst")) {
-            r = readcapnptags(fn, data_len);
-            data = r.data();
-            dodelete=false;
+            data = readcapnptags(fn, data_len);
         } else {
             std::cerr << "filetype not recognized." << std::endl;
             continue;
@@ -146,10 +138,7 @@ int main(int argc, char **argv)
         SPENT_TIME += duration; 
         ETA = (SPENT_TIME/nanalyzed)*(newtagfiles.size()-nanalyzed);
         
-         std::cout << "analysis T / avg T / ETA: " << duration << "s / " << SPENT_TIME/(i+1) <<"s / " << ETA/(60*omp_get_num_threads()) <<"m" << std::endl;
-        if (dodelete) {
-           delete[] data;
-        }
+        std::cout << "analysis T / avg T / ETA: " << duration << "s / " << SPENT_TIME/(i+1) <<"s / " << ETA/(60*omp_get_num_threads()) <<"m" << std::endl;
     }
     
     return 0;
@@ -159,7 +148,7 @@ int main(int argc, char **argv)
 /********************************************************************************
 *** separate tag vectors
 */
-void separate_tags_per_channels(const long long* tags, const long long numtags, std::vector<std::vector<long long>>& tags_per_channel, const std::vector<uint16_t> channels, const Config& cfg) {
+void separate_tags_per_channels(const std::vector<long long> &tags, const long long numtags, std::vector<std::vector<long long>>& tags_per_channel, const std::vector<uint16_t> channels, const Config& cfg) {
     for (size_t i = 0; i<channels.size(); ++i) {
         tags_per_channel.emplace_back(std::vector<long long>());
     }

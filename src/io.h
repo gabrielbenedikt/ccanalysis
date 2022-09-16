@@ -13,6 +13,7 @@
 #include <fmt/core.h>
 #include <fmt/os.h>
 #include <fcntl.h>
+#include <memory>
 #include <exception>
 #include <cassert>
 #include <H5Cpp.h>
@@ -41,10 +42,11 @@ enum HDF5_COMP_ALG {
 bool fileExists(const std::string& fn);
 
 void readTSVtags(const std::string fn, std::vector<long long> &result, long long& out_data_len);
-long long* readHDF5tags(const std::string fn, long long& out_data_len);
+//long long* readHDF5tags(const std::string fn, long long& out_data_len);
+void readHDF5tags(const std::string fn, std::vector<long long> & result, long long& out_data_len);
 std::vector<long long> readcapnptags(const std::string fn, long long& out_data_len);
 
-void lltoTSV(const std::string fn, const long long* data, const long long len);
+void lltoTSV(const std::string fn, const std::vector<long long> &data, const long long len);
 void writeHDFtags(const std::string fn, const std::vector<long long> &r, const uint8_t compression_alg=HDF5_COMP_ALG_ZLIB, const uint8_t compression_level=5);
 void writeHDFtagsC(const std::string fn, const std::vector<long long> &r, const uint8_t compression_alg=HDF5_COMP_ALG_ZLIB, const uint8_t compression_level=5);
 void writecapnptags(std::string fname, std::vector<long long> data, bool compress=true, const uint8_t compression_level=3);

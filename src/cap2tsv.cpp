@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
         long long cap_len = 0;
         std::vector<long long> data = readcapnptags(fn, cap_len);
         std::cout << "ok\twriting..." << std::flush;
-        lltoTSV(fn_tsv, data.data(), cap_len);
+        lltoTSV(fn_tsv, data, cap_len);
         auto endtime = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endtime - starttime).count();
         std::cout << "ok\t" << duration << "ms" << std::endl;
