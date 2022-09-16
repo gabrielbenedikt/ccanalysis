@@ -65,7 +65,8 @@ int main(int argc, char **argv) {
         stringreplace(fn_tsv, std::filesystem::path(fn).extension(), ".txt");
         std::cout << fn << "\treading..." << std::flush;
         long long cap_len = 0;
-        std::vector<long long> data = readcapnptags(fn, cap_len);
+        std::vector<long long> data;
+        readcapnptags(fn, data, cap_len);
         std::cout << "ok\twriting..." << std::flush;
         lltoTSV(fn_tsv, data, cap_len);
         auto endtime = std::chrono::high_resolution_clock::now();

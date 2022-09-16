@@ -102,7 +102,7 @@ int main(int argc, char **argv)
         } else if ((std::filesystem::path(fn).extension() == ".txt") || (std::filesystem::path(fn).extension() == ".tsv")) {
             readTSVtags(fn, data, data_len);
         } else if ((std::filesystem::path(fn).extension() == ".tags") || (std::filesystem::path(fn).extension() == ".zst")) {
-            data = readcapnptags(fn, data_len);
+            readcapnptags(fn, data, data_len);
         } else {
             std::cerr << "filetype not recognized." << std::endl;
             continue;

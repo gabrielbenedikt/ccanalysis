@@ -14,8 +14,7 @@ bool fileExists(const std::string& fn){
 /********************************************************************************
 *** read capnp tag file
 */
-std::vector<long long> readcapnptags(const std::string fn, long long& out_data_len){
-    std::vector<long long> result;
+void readcapnptags(const std::string fn, std::vector<long long> &data, long long& out_data_len){
     ::capnp::ReaderOptions opts;
     opts.traversalLimitInWords = 1.9 * 1024 * 1024 * 1024 ;
     if (std::filesystem::path(fn).extension() == ".zst") {
@@ -36,8 +35,8 @@ std::vector<long long> readcapnptags(const std::string fn, long long& out_data_l
                 
                 for (auto list: tagllist) {
                     for (auto tags: list) {
-                        result.emplace_back(tags.getChannel());
-                        result.emplace_back(tags.getTime());
+                        data.emplace_back(tags.getChannel());
+                        data.emplace_back(tags.getTime());
                     }
                 }
             }
@@ -61,8 +60,8 @@ std::vector<long long> readcapnptags(const std::string fn, long long& out_data_l
                 auto tagllist = reader.getTags();
                 for (auto list: tagllist) {
                     for (auto tags: list) {
-                        result.emplace_back(tags.getChannel());
-                        result.emplace_back(tags.getTime());
+                        data.emplace_back(tags.getChannel());
+                        data.emplace_back(tags.getTime());
                     }
                 }
             }
@@ -79,9 +78,7 @@ std::vector<long long> readcapnptags(const std::string fn, long long& out_data_l
         }
     }
     
-    out_data_len = result.size();
-    
-    return result;
+    out_data_len = data.size();
 }
 
 void writecapnptags(std::string fname, std::vector<long long> data, bool compress, const uint8_t compression_level) {
