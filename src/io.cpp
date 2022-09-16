@@ -84,6 +84,59 @@ std::vector<long long> readcapnptags(const std::string fn, long long& out_data_l
     return result;
 }
 
+void writecapnptags(std::string fname, std::vector<long long> data, bool compress, const uint8_t compression_level) {
+    uint64_t maxlistlen = pow(2,28)-1;
+    uint32_t numlists = (uint32_t) (data.size()/maxlistlen);
+    if (data.size()>maxlistlen*numlists) {
+        ++numlists;
+    }
+    std::vector<std::vector<long long>> chunks;
+    for (size_t i = 0; i<numlists; ++i) {
+        auto end = ((i+1)*maxlistlen > data.size()) ? data.end() : data.begin()+(i+1)*maxlistlen;
+        chunks.push_back(std::vector<long long>(data.begin()+i*maxlistlen, end));
+    }
+    
+    if (compress) {
+        fname = fname + ".zst";
+        ::capnp::MallocMessageBuilder message;
+        auto tags = message.initRoot<Tags>();
+        auto llist = tags.initTags(numlists);
+        for (size_t i=0; i<numlists; ++i){
+            auto list = llist.init(i, chunks[i].size()/2);
+            for (size_t j=0; j<chunks[i].size()/2; ++j){
+                list[j].setChannel(chunks[i][2*j]);
+                list[j].setTime(chunks[i][2*j+1]);
+            }
+        }
+        std::ofstream ofs (fname, std::ios::out | std::ios::binary); 
+        std::stringstream ss;
+        ::kj::std::StdOutputStream kjos(ss);
+        
+        boost::iostreams::filtering_streambuf<boost::iostreams::output> outStream; 
+        outStream.push(boost::iostreams::zstd_compressor(compression_level)); 
+        outStream.push(ofs); 
+        
+        writeMessage(kjos, message);
+        boost::iostreams::copy(ss, outStream); 
+    } else {
+        ::capnp::MallocMessageBuilder message;
+        auto tags = message.initRoot<Tags>();
+        auto llist = tags.initTags(numlists);
+        for (size_t i=0; i<numlists; ++i){
+            auto list = llist.init(i, chunks[i].size()/2);
+            for (size_t j=0; j<chunks[i].size()/2; ++j){
+                list[j].setChannel(chunks[i][2*j]);
+                list[j].setTime(chunks[i][2*j+1]);
+            }
+        }
+
+        int fd = open(fname.c_str(), O_RDWR | O_CREAT | O_TRUNC, 0666);
+        writeMessageToFd(fd, message);
+        close(fd);
+    }
+
+}
+
 /********************************************************************************
 *** read tsv tag file
 */

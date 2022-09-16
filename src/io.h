@@ -23,6 +23,8 @@
 #include <boost/iostreams/filtering_streambuf.hpp>
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/zstd.hpp>
+#include <boost/iostreams/stream.hpp>
+#include <boost/iostreams/device/array.hpp>
 
 #include "tags.capnp.h"
 #include <capnp/message.h>
@@ -45,6 +47,8 @@ std::vector<long long> readcapnptags(const std::string fn, long long& out_data_l
 void lltoTSV(const std::string fn, const long long* data, const long long len);
 void writeHDFtags(const std::string fn, const std::vector<long long> &r, const uint8_t compression_alg=HDF5_COMP_ALG_ZLIB, const uint8_t compression_level=5);
 void writeHDFtagsC(const std::string fn, const std::vector<long long> &r, const uint8_t compression_alg=HDF5_COMP_ALG_ZLIB, const uint8_t compression_level=5);
+void writecapnptags(std::string fname, std::vector<long long> data, bool compress=true, const uint8_t compression_level=3);
+
 std::vector<std::string> get_new_tagfiles(const std::string rawext, const std::string analyzed_ext="", const std::vector<std::string> excludes = {});
 
 #endif // IO_H
