@@ -47,7 +47,7 @@ struct histograms {
     double resolution;
 };
 
-void separate_tags_per_channels(const std::vector<long long> &tags, const long long numtags, std::vector<std::vector<long long>>& tags_per_channel, const std::vector<uint16_t> channels, const Config& cfg);
+void separate_tags_per_channels(const std::vector<long long> &tags, std::vector<std::vector<long long>>& tags_per_channel, const std::vector<uint16_t> channels, const Config& cfg);
 
 histogram_onepattern histogram(const std::vector<std::vector<long long>>* tags_per_channel, const std::vector<uint16_t>* channels, const std::vector<long long>* offsets, const std::vector<uint16_t> pattern, const long long wnd);
 

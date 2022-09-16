@@ -14,7 +14,7 @@ bool fileExists(const std::string& fn){
 /********************************************************************************
 *** read capnp tag file
 */
-void readcapnptags(const std::string fn, std::vector<long long> &data, long long& out_data_len){
+void readcapnptags(const std::string fn, std::vector<long long> &data){
     ::capnp::ReaderOptions opts;
     opts.traversalLimitInWords = 1.9 * 1024 * 1024 * 1024 ;
     if (std::filesystem::path(fn).extension() == ".zst") {
@@ -77,8 +77,6 @@ void readcapnptags(const std::string fn, std::vector<long long> &data, long long
             std::cout << se.what() << std::endl;
         }
     }
-    
-    out_data_len = data.size();
 }
 
 void writecapnptags(std::string fname, std::vector<long long> data, bool compress, const uint8_t compression_level) {
@@ -137,7 +135,7 @@ void writecapnptags(std::string fname, std::vector<long long> data, bool compres
 /********************************************************************************
 *** read tsv tag file
 */
-void readTSVtags(const std::string fn, std::vector<long long> &result, long long& out_data_len) {
+void readTSVtags(const std::string fn, std::vector<long long> &result) {
     if (FILE *f = fopen(fn.c_str(), "r")) {
         fseek(f, 0, SEEK_END);
         result.reserve(2*ftell(f));
@@ -156,7 +154,6 @@ void readTSVtags(const std::string fn, std::vector<long long> &result, long long
         std::from_chars(s.data(), s.data()+s.size(), val);
         result.push_back(val);
     }
-    out_data_len = result.size();
 }
 
 void writeHDFtags(const std::string fn, const std::vector<long long> &r, const uint8_t compression_alg, const uint8_t compression_level) {     
@@ -276,14 +273,15 @@ void writeHDFtagsC(const std::string fn, const std::vector<long long> &r, const 
     H5Fclose(file_id);
 }
 
-void lltoTSV(const std::string fn, const std::vector<long long> &data, const long long len) {
+void lltoTSV(const std::string fn, const std::vector<long long> &data) {
     auto tsvfile = fmt::output_file(fn, fmt::buffer_size=262144);
-    for (long long i = 0; i<len-1; i+=2) {
+    size_t len = data.size();
+    for (size_t i = 0; i<len-1; i+=2) {
         tsvfile.print("{0}\t{1}\n", data[i], data[i+1]);
     }
 }
 
-void readHDF5tags(const std::string fn, std::vector<long long>& result, long long& out_data_len)
+void readHDF5tags(const std::string fn, std::vector<long long>& result)
 {
     std::string datasetPath = "/tags/block0_values";
     H5::H5File file(fn.c_str(), H5F_ACC_RDONLY);
@@ -304,7 +302,7 @@ void readHDF5tags(const std::string fn, std::vector<long long>& result, long lon
     // read
     long long* data_out = new long long[NX*NY];
     
-    out_data_len = NX*NY;
+    long long out_data_len = NX*NY;
     dataset.read( data_out, H5::PredType::NATIVE_LLONG);
     result = std::vector<long long>(data_out, data_out+out_data_len);
     file.close();

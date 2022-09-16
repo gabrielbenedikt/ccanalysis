@@ -95,14 +95,13 @@ int main(int argc, char **argv)
         * read tag file
         */
         std::vector<long long> data;
-        long long data_len = 0;
         
         if ((std::filesystem::path(fn).extension() == ".h5")) {
-            readHDF5tags(fn, data, data_len);
+            readHDF5tags(fn, data);
         } else if ((std::filesystem::path(fn).extension() == ".txt") || (std::filesystem::path(fn).extension() == ".tsv")) {
-            readTSVtags(fn, data, data_len);
+            readTSVtags(fn, data);
         } else if ((std::filesystem::path(fn).extension() == ".tags") || (std::filesystem::path(fn).extension() == ".zst")) {
-            readcapnptags(fn, data, data_len);
+            readcapnptags(fn, data);
         } else {
             std::cerr << "filetype not recognized." << std::endl;
             continue;
@@ -115,7 +114,7 @@ int main(int argc, char **argv)
         /*
         * separate into channels
         */
-        separate_tags_per_channels(data, data_len, tags_per_channel, channels, cfg);
+        separate_tags_per_channels(data, tags_per_channel, channels, cfg);
         
         /*
         * create histogram
@@ -148,11 +147,12 @@ int main(int argc, char **argv)
 /********************************************************************************
 *** separate tag vectors
 */
-void separate_tags_per_channels(const std::vector<long long> &tags, const long long numtags, std::vector<std::vector<long long>>& tags_per_channel, const std::vector<uint16_t> channels, const Config& cfg) {
+void separate_tags_per_channels(const std::vector<long long> &tags, std::vector<std::vector<long long>>& tags_per_channel, const std::vector<uint16_t> channels, const Config& cfg) {
     for (size_t i = 0; i<channels.size(); ++i) {
         tags_per_channel.emplace_back(std::vector<long long>());
     }
     
+    long long numtags = tags.size();
     long long maxtag = numtags;
     if (cfg.TRUNCATE_S > 0) {
         long long firsttag = tags[1];

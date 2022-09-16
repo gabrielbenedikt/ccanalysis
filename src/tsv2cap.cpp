@@ -75,9 +75,8 @@ int main(int argc, char **argv) {
         std::string fn_cap = fn;
         stringreplace(fn_cap, std::filesystem::path(fn).extension(), ".tags");
         std::cout << fn << "\treading..." << std::flush;
-        long long tsv_len = 0;
         std::vector<long long> data;
-        readTSVtags(fn, data, tsv_len);
+        readTSVtags(fn, data);
         std::cout << "ok\twriting..." << std::flush;
         writecapnptags(fn_cap, data, compress, compression_level);
         auto endtime = std::chrono::high_resolution_clock::now();

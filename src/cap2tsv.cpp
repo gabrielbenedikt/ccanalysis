@@ -64,11 +64,10 @@ int main(int argc, char **argv) {
         std::string fn_tsv = fn;
         stringreplace(fn_tsv, std::filesystem::path(fn).extension(), ".txt");
         std::cout << fn << "\treading..." << std::flush;
-        long long cap_len = 0;
         std::vector<long long> data;
-        readcapnptags(fn, data, cap_len);
+        readcapnptags(fn, data);
         std::cout << "ok\twriting..." << std::flush;
-        lltoTSV(fn_tsv, data, cap_len);
+        lltoTSV(fn_tsv, data);
         auto endtime = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endtime - starttime).count();
         std::cout << "ok\t" << duration << "ms" << std::endl;

@@ -41,11 +41,11 @@ enum HDF5_COMP_ALG {
 
 bool fileExists(const std::string& fn);
 
-void readTSVtags(const std::string fn, std::vector<long long> &result, long long& out_data_len);
-void readHDF5tags(const std::string fn, std::vector<long long> &result, long long& out_data_len);
-void readcapnptags(const std::string fn, std::vector<long long> &result, long long& out_data_len);
+void readTSVtags(const std::string fn, std::vector<long long> &result);
+void readHDF5tags(const std::string fn, std::vector<long long> &result);
+void readcapnptags(const std::string fn, std::vector<long long> &result);
 
-void lltoTSV(const std::string fn, const std::vector<long long> &data, const long long len);
+void lltoTSV(const std::string fn, const std::vector<long long> &data);
 void writeHDFtags(const std::string fn, const std::vector<long long> &r, const uint8_t compression_alg=HDF5_COMP_ALG_ZLIB, const uint8_t compression_level=5);
 void writeHDFtagsC(const std::string fn, const std::vector<long long> &r, const uint8_t compression_alg=HDF5_COMP_ALG_ZLIB, const uint8_t compression_level=5);
 void writecapnptags(std::string fname, std::vector<long long> data, bool compress=true, const uint8_t compression_level=3);

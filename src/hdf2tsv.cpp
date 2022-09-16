@@ -65,11 +65,10 @@ int main(int argc, char **argv) {
         std::string fn_tsv = fn;
         stringreplace(fn_tsv, std::filesystem::path(fn).extension(), ".txt");
         std::cout << fn << "\treading..." << std::flush;
-        long long hdf_len = 0;
         std::vector<long long> data;
-        readHDF5tags(fn, data, hdf_len);
+        readHDF5tags(fn, data);
         std::cout << "ok\twriting..." << std::flush;
-        lltoTSV(fn_tsv, data, hdf_len);
+        lltoTSV(fn_tsv, data);
         auto endtime = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endtime - starttime).count();
         std::cout << "ok\t" << duration << "ms" << std::endl;

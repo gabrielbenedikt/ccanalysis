@@ -88,9 +88,8 @@ int main(int argc, char **argv) {
         std::string fn_hdf = fn;
         stringreplace(fn_hdf, std::filesystem::path(fn).extension(), ".h5");
         std::cout << fn << "\treading..." << std::flush;
-        long long tsv_len = 0;
         std::vector<long long> r;
-        readTSVtags(fn, r, tsv_len);
+        readTSVtags(fn, r);
         std::cout << "ok\twriting..." << std::flush;
         writeHDFtags(fn_hdf, r, compression_alg, compression_level);
         auto endtime = std::chrono::high_resolution_clock::now();
