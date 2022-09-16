@@ -1,10 +1,12 @@
-#include "hdf2tsv.h"
+#include "tsv2cap.h"
 
 namespace bpo = boost::program_options;
 
 int main(int argc, char **argv) {
     
     std::vector<std::string> fnames = {};
+    bool compress = false;
+    uint32_t compression_level = 3;
     /*
      * parse arguments
      */
@@ -12,13 +14,15 @@ int main(int argc, char **argv) {
         bpo::options_description args("Arguments");
         args.add_options()
             ("help,h", "prints this message")
+            ("compress,c", bpo::bool_switch()->default_value(false), "zstd-compress output file")
+            ("compression-level,l", bpo::value<uint32_t>()->default_value(3), "zstd compression level")
             ;
 
         // Hidden options, will be allowed both on command line and
         // in config file, but will not be shown to the user.
         bpo::options_description hidden("Hidden options");
         hidden.add_options()
-            ("input-files", bpo::value<std::vector<std::string>>(), "HDF5 files to convert")
+            ("input-files", bpo::value<std::vector<std::string>>(), "TSV files to convert")
             ;
         
         bpo::options_description cmdline_options;
@@ -34,7 +38,7 @@ int main(int argc, char **argv) {
         
         if (vm.count("help")) {
             std::cout << "Usage: ./cap2tsv input-files\n";
-            std::cout << "Converts capnproto files to tab separated values (TSV) files.\n";
+            std::cout << "Converts TSV files capnproto tag files.\n";
             std::cout << args << "\n";
             return 0;
         }
@@ -45,6 +49,13 @@ int main(int argc, char **argv) {
             std::cout << "no input files specified.\n";
             return 1;
         }
+        if (vm.count("compression-level")) {
+            compression_level = vm["compression-level"].as< uint32_t >();
+        } else {
+            std::cout << "no input files specified.\n";
+            return 1;
+        }
+        compress = vm["compress"].as<bool>();
         
     }
     catch(std::exception& e) {
@@ -61,13 +72,14 @@ int main(int argc, char **argv) {
      */
     for (auto fn: fnames) {
         auto starttime = std::chrono::high_resolution_clock::now();
-        std::string fn_tsv = fn;
-        stringreplace(fn_tsv, std::filesystem::path(fn).extension(), ".txt");
+        std::string fn_cap = fn;
+        stringreplace(fn_cap, std::filesystem::path(fn).extension(), ".tags");
         std::cout << fn << "\treading..." << std::flush;
-        long long cap_len = 0;
-        std::vector<long long> data = readcapnptags(fn, cap_len);
+        long long tsv_len = 0;
+        std::vector<long long> data;
+        readTSVtags(fn, data, tsv_len);
         std::cout << "ok\twriting..." << std::flush;
-        lltoTSV(fn_tsv, data.data(), cap_len);
+        writecapnptags(fn_cap, data, compress, compression_level);
         auto endtime = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endtime - starttime).count();
         std::cout << "ok\t" << duration << "ms" << std::endl;

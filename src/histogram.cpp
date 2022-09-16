@@ -94,19 +94,23 @@ int main(int argc, char **argv)
         /*
         * read tag file
         */
+        std::vector<long long> r;
         long long data_len = 0;
         long long *data;
+        bool dodelete = false;
+        
         
         if ((std::filesystem::path(fn).extension() == ".h5")) {
             data = readHDF5tags(fn, data_len);
+            dodelete=true;
         } else if ((std::filesystem::path(fn).extension() == ".txt") || (std::filesystem::path(fn).extension() == ".tsv")) {
-            std::vector<long long> r;
             readTSVtags(fn, r, data_len);
-            data = &r[0];
+            data = r.data();
+            dodelete=false;
         } else if ((std::filesystem::path(fn).extension() == ".tags") || (std::filesystem::path(fn).extension() == ".zst")) {
-            std::vector<long long> r;
             r = readcapnptags(fn, data_len);
-            data = &r[0];
+            data = r.data();
+            dodelete=false;
         } else {
             std::cerr << "filetype not recognized." << std::endl;
             continue;
@@ -142,9 +146,10 @@ int main(int argc, char **argv)
         SPENT_TIME += duration; 
         ETA = (SPENT_TIME/nanalyzed)*(newtagfiles.size()-nanalyzed);
         
-         std::cout << "analysis T / avg T / ETA: " << duration << "s / " << SPENT_TIME/i <<"s / " << ETA/(60*omp_get_num_threads()) <<"m" << std::endl;
-        
-        delete[] data;
+         std::cout << "analysis T / avg T / ETA: " << duration << "s / " << SPENT_TIME/(i+1) <<"s / " << ETA/(60*omp_get_num_threads()) <<"m" << std::endl;
+        if (dodelete) {
+           delete[] data;
+        }
     }
     
     return 0;
@@ -154,8 +159,7 @@ int main(int argc, char **argv)
 /********************************************************************************
 *** separate tag vectors
 */
-void separate_tags_per_channels(const long long* tags, const long long numtags, std::vector<std::vector<long long>>& tags_per_channel, const std::vector<uint16_t> channels, const Config& cfg) 
-{   
+void separate_tags_per_channels(const long long* tags, const long long numtags, std::vector<std::vector<long long>>& tags_per_channel, const std::vector<uint16_t> channels, const Config& cfg) {
     for (size_t i = 0; i<channels.size(); ++i) {
         tags_per_channel.emplace_back(std::vector<long long>());
     }
@@ -180,7 +184,6 @@ void separate_tags_per_channels(const long long* tags, const long long numtags, 
     for (long long i=0; i<maxtag; i+=2) {
         currtag = tags[i+1];
         //some tags are zero. this breaks stuff. exclude them. effing tagger.
-        std::cout << currtag << std::endl;
         if (currtag!=0) {
             auto it = std::find(channels.begin(), channels.end(), tags[i]);
             if (it != channels.end()) {
