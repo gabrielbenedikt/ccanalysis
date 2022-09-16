@@ -106,7 +106,6 @@ void readTSVtags(const std::string fn, std::vector<long long> &result, long long
         std::from_chars(s.data(), s.data()+s.size(), val);
         result.push_back(val);
     }
-    
     out_data_len = result.size();
 }
 
@@ -117,7 +116,11 @@ void writeHDFtags(const std::string fn, const std::vector<long long> &r, const u
     int rank_values = sizeof(dim_values) / sizeof(hsize_t);
     //chunk for compression
     hsize_t chunkdims_values[2];
-    chunkdims_values[0] = 16380;//what pandas uses
+    if (r.size() > 16380) {
+        chunkdims_values[0] = 16380;//what pandas uses
+    } else {
+        chunkdims_values[0] = uint(r.size()/2);
+    }
     chunkdims_values[1] = 2;
     // group name to be compatible with python pandas
     std::string groupName = "/tags";
