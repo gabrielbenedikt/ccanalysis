@@ -115,6 +115,9 @@ int main(int argc, char **argv)
         * separate into channels
         */
         separate_tags_per_channels(data, tags_per_channel, channels, cfg);
+
+        //free memory of input data
+        data = std::vector<long long>();
         
         /*
         * create histogram
