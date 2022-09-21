@@ -5,18 +5,15 @@
 */
 bool fileExists(const std::string& fn){
     struct stat buf;
-    if (stat(fn.c_str(), &buf) != -1) {
-        return true;
-    }
-    return false;
+    return (stat(fn.c_str(), &buf) != -1);
 }
 
 /********************************************************************************
 *** read capnp tag file
 */
-void readcapnptags(const std::string fn, std::vector<long long> &data){
+void readcapnptags(const std::string &fn, std::vector<long long> &result){
     ::capnp::ReaderOptions opts;
-    opts.traversalLimitInWords = 1.9 * 1024 * 1024 * 1024 ;
+    opts.traversalLimitInWords = CAPNP_TRAVERSAL_LIMIT;
     if (std::filesystem::path(fn).extension() == ".zst") {
         std::stringstream ss;
         std::ifstream input(fn,std::ios_base::in);
@@ -35,8 +32,8 @@ void readcapnptags(const std::string fn, std::vector<long long> &data){
                 
                 for (auto list: tagllist) {
                     for (auto tags: list) {
-                        data.emplace_back(tags.getChannel());
-                        data.emplace_back(tags.getTime());
+                        result.emplace_back(tags.getChannel());
+                        result.emplace_back(tags.getTime());
                     }
                 }
             }
@@ -60,8 +57,8 @@ void readcapnptags(const std::string fn, std::vector<long long> &data){
                 auto tagllist = reader.getTags();
                 for (auto list: tagllist) {
                     for (auto tags: list) {
-                        data.emplace_back(tags.getChannel());
-                        data.emplace_back(tags.getTime());
+                        result.emplace_back(tags.getChannel());
+                        result.emplace_back(tags.getTime());
                     }
                 }
             }
@@ -79,20 +76,20 @@ void readcapnptags(const std::string fn, std::vector<long long> &data){
     }
 }
 
-void writecapnptags(std::string fname, std::vector<long long> data, bool compress, const uint8_t compression_level) {
-    uint64_t maxlistlen = pow(2,28)-1;
-    uint32_t numlists = (uint32_t) (data.size()/maxlistlen);
+void writecapnptags(std::string &fn, std::vector<long long> data, const bool compress, const uint8_t compression_level) {
+    const size_t maxlistlen = (1<<28)-1;
+    auto numlists = (uint32_t) (data.size()/maxlistlen);
     if (data.size()>maxlistlen*numlists) {
         ++numlists;
     }
     std::vector<std::vector<long long>> chunks;
     for (size_t i = 0; i<numlists; ++i) {
         auto end = ((i+1)*maxlistlen > data.size()) ? data.end() : data.begin()+(i+1)*maxlistlen;
-        chunks.push_back(std::vector<long long>(data.begin()+i*maxlistlen, end));
+        chunks.emplace_back(std::vector<long long>(data.begin()+i*maxlistlen, end));
     }
     
     if (compress) {
-        fname = fname + ".zst";
+        fn = fn + ".zst";
         ::capnp::MallocMessageBuilder message;
         auto tags = message.initRoot<Tags>();
         auto llist = tags.initTags(numlists);
@@ -103,7 +100,7 @@ void writecapnptags(std::string fname, std::vector<long long> data, bool compres
                 list[j].setTime(chunks[i][2*j+1]);
             }
         }
-        std::ofstream ofs (fname, std::ios::out | std::ios::binary); 
+        std::ofstream ofs (fn, std::ios::out | std::ios::binary); 
         std::stringstream ss;
         ::kj::std::StdOutputStream kjos(ss);
         
@@ -125,7 +122,7 @@ void writecapnptags(std::string fname, std::vector<long long> data, bool compres
             }
         }
 
-        int fd = open(fname.c_str(), O_RDWR | O_CREAT | O_TRUNC, 0666);
+        int fd = open(fn.c_str(), O_RDWR | O_CREAT | O_TRUNC, 0666);
         writeMessageToFd(fd, message);
         close(fd);
     }
@@ -135,11 +132,11 @@ void writecapnptags(std::string fname, std::vector<long long> data, bool compres
 /********************************************************************************
 *** read tsv tag file
 */
-void readTSVtags(const std::string fn, std::vector<long long> &result) {
+void readTSVtags(const std::string &fn, std::vector<long long> &result) {
     if (FILE *f = fopen(fn.c_str(), "r")) {
-        fseek(f, 0, SEEK_END);
+        (void)fseek(f, 0, SEEK_END);
         result.reserve(2*ftell(f));
-        fclose(f);
+        (void)fclose(f);
     }
     std::ifstream f(fn);
     std::stringstream ss;
@@ -156,7 +153,7 @@ void readTSVtags(const std::string fn, std::vector<long long> &result) {
     }
 }
 
-void writeHDFtags(const std::string fn, const std::vector<long long> &r, const uint8_t compression_alg, const uint8_t compression_level) {     
+void writeHDFtags(const std::string &fn, const std::vector<long long> &r, const uint8_t compression_alg, const uint8_t compression_level) {     
     hsize_t dim_values[2];
     dim_values[0] = size_t(r.size()/2);
     dim_values[1] = 2;
@@ -174,7 +171,7 @@ void writeHDFtags(const std::string fn, const std::vector<long long> &r, const u
     std::string datasetPath_values = "/tags/block0_values";
     
     H5::H5File *file = new H5::H5File(fn.c_str(), H5F_ACC_TRUNC);
-    H5::Group* group = new H5::Group(file->createGroup(groupName.c_str()));
+    H5::Group *group = new H5::Group(file->createGroup(groupName.c_str()));
     H5::DSetCreatPropList ds_creat_plist_values;
     ds_creat_plist_values.setChunk(2, chunkdims_values);
     
@@ -206,74 +203,7 @@ void writeHDFtags(const std::string fn, const std::vector<long long> &r, const u
     delete file;
 }
 
-void writeHDFtagsC(const std::string fn, const std::vector<long long> &r, const uint8_t compression_alg, const uint8_t compression_level) { 
-    hid_t file_id;
-    hid_t ds_create_plist_values;
-    hid_t dataset_id_values;
-    hid_t dataspace_id_values;
-    hid_t group_id;
-    
-    std::string groupName = "/tags";
-    std::string datasetPath_values = "/tags/block0_values";
-    
-    //define data dimensions
-    hsize_t dim_values[2];
-    dim_values[0] = size_t(r.size()/2);
-    dim_values[1] = 2;
-    int rank_values = sizeof(dim_values) / sizeof(hsize_t);
-    //chunk for compression
-    hsize_t chunkdims_values[2];
-    chunkdims_values[0] = 16380;//what pandas uses
-    chunkdims_values[1] = 2;
-    
-    //oen file
-    file_id = H5Fcreate(fn.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-    
-    // define dataset properties
-    // group name to be compatible with python pandas
-    ds_create_plist_values = H5Pcreate(H5P_DATASET_CREATE);
-    H5Pset_chunk(ds_create_plist_values, 2, chunkdims_values);
-    switch (compression_alg) {
-        case HDF5_COMP_ALG_ZLIB:
-            H5Pset_shuffle(ds_create_plist_values);
-            H5Pset_deflate(ds_create_plist_values, compression_level);
-            break;
-        case HDF5_COMP_ALG_SZIP:
-            H5Pset_shuffle(ds_create_plist_values);
-            H5Pset_deflate(H5_SZIP_NN_OPTION_MASK, compression_level);
-            break;
-        case HDF5_COMP_ALG_NBIT:
-            H5Pset_shuffle(ds_create_plist_values);
-            H5Pset_nbit(ds_create_plist_values);
-            break;
-        default:
-            break;
-    }
-    
-    H5Pset_fill_time(ds_create_plist_values, H5D_FILL_TIME_ALLOC);
-    H5Pset_alloc_time(ds_create_plist_values, H5D_ALLOC_TIME_INCR);
-    
-    //dataspaces
-    dataspace_id_values = H5Screate_simple(rank_values, dim_values, NULL);
-    
-    //create group
-    group_id = H5Gcreate2(file_id, groupName.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    
-    // datasets
-    dataset_id_values   = H5Dcreate2(file_id, datasetPath_values.c_str(),   H5T_STD_I64LE,  dataspace_id_values,    H5P_DEFAULT, ds_create_plist_values, H5P_DEFAULT);
-    
-    //
-    // write data
-    //
-    H5Dwrite(dataset_id_values, H5T_STD_I64LE, H5S_ALL, H5S_ALL, H5P_DEFAULT, r.data());
-    // close everything
-    H5Dclose(dataset_id_values);
-    H5Sclose(dataspace_id_values);
-    H5Gclose(group_id);
-    H5Fclose(file_id);
-}
-
-void lltoTSV(const std::string fn, const std::vector<long long> &data) {
+void lltoTSV(const std::string &fn, const std::vector<long long> &data) {
     auto tsvfile = fmt::output_file(fn, fmt::buffer_size=262144);
     size_t len = data.size();
     for (size_t i = 0; i<len-1; i+=2) {
@@ -281,7 +211,7 @@ void lltoTSV(const std::string fn, const std::vector<long long> &data) {
     }
 }
 
-void readHDF5tags(const std::string fn, std::vector<long long>& result)
+void readHDF5tags(const std::string &fn, std::vector<long long>& result)
 {
     std::string datasetPath = "/tags/block0_values";
     H5::H5File file(fn.c_str(), H5F_ACC_RDONLY);
@@ -294,9 +224,9 @@ void readHDF5tags(const std::string fn, std::vector<long long>& result)
   
     // Get the dimension of dataspace
     hsize_t dims_out[2];
-    dataspace.getSimpleExtentDims( dims_out, NULL);
-    int NX=dims_out[0];
-    int NY=dims_out[1];
+    dataspace.getSimpleExtentDims( dims_out, nullptr);
+    hsize_t NX=dims_out[0];
+    hsize_t NY=dims_out[1];
     assert(NY==2);
     
     // read
@@ -309,51 +239,44 @@ void readHDF5tags(const std::string fn, std::vector<long long>& result)
     delete[] data_out;
 }
 
-
-std::vector<std::string> get_new_tagfiles(const std::string raw_ext, const std::string analyzed_ext, const std::vector<std::string> excludes) {
+std::vector<std::string> get_new_tagfiles(const std::string &raw_ext, const std::string &analyzed_ext, const std::vector<std::string> &excludes) {
     std::string path = std::filesystem::current_path();
     std::vector<std::string> alltagfiles = {};
     std::vector<std::string> analyzedfiles = {};
     std::vector<std::string> newtagfiles = {};
     
-    for ( auto & p : std::filesystem::directory_iterator(path) ) {
-        std::cout << "found file " << p << std::endl;
+    for ( const auto & p : std::filesystem::directory_iterator(path) ) {
         if ( p.path().extension() == raw_ext ) {
-            std::cout << "raw_ext found" << std::endl;
             if (std::find(begin(excludes), end(excludes), p.path().filename()) == excludes.end()) { 
-                std::cout << "insert in alltagfiles" << std::endl;
                 alltagfiles.emplace_back(p.path());
             }
-        } else if ((analyzed_ext != "") && ( p.path().extension() == analyzed_ext )) {
-            std::cout << "analyzed_ext found. insert in analyzed files" << std::endl;
+        } else if ((!analyzed_ext.empty()) && ( p.path().extension() == analyzed_ext )) {
             analyzedfiles.emplace_back(p.path());
         }
     }
     
     newtagfiles = alltagfiles;
-    if ( analyzedfiles.size() == 0 ) {
+    if ( analyzedfiles.empty() ) {
         return alltagfiles;
-    } else {
-        auto it = newtagfiles.begin();
-        while (it != newtagfiles.end() ) {
-            bool found = false;
-            std::string analyzed_string = *it;
-            stringreplace(analyzed_string, raw_ext, "");
-            for ( auto p : analyzedfiles ) {
-                std::string tmpstring = p;
-                stringreplace(tmpstring,analyzed_ext,"");
-                
-                if (( tmpstring == analyzed_string)) {
-                    it=newtagfiles.erase(it);
-                    found = true;
-                    std::cout << p << " in analyzed files. remove for list to process" << std::endl;
-                }
-            }
-            if (!found) {
-                ++it;
+    }
+    
+    auto it = newtagfiles.begin();
+    while (it != newtagfiles.end() ) {
+        bool found = false;
+        std::string analyzed_string = *it;
+        stringreplace(analyzed_string, raw_ext, "");
+        for ( const auto &p : analyzedfiles ) {
+            std::string tmpstring = p;
+            stringreplace(tmpstring,analyzed_ext,"");
+            
+            if (( tmpstring == analyzed_string)) {
+                it=newtagfiles.erase(it);
+                found = true;
             }
         }
-        
-        return newtagfiles;
+        if (!found) {
+            ++it;
+        }
     }
+    return newtagfiles;
 }

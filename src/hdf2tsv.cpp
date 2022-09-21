@@ -16,23 +16,23 @@ int main(int argc, char **argv) {
 
         // Hidden options, will be allowed both on command line and
         // in config file, but will not be shown to the user.
-        bpo::options_description hidden("Hidden options");
-        hidden.add_options()
+        bpo::options_description args_hidden("Hidden options");
+        args_hidden.add_options()
             ("input-files", bpo::value<std::vector<std::string>>(), "HDF5 files to convert")
             ;
         
         bpo::options_description cmdline_options;
-        cmdline_options.add(args).add(hidden);
+        cmdline_options.add(args).add(args_hidden);
         
-        bpo::positional_options_description p;
-        p.add("input-files", -1);
+        bpo::positional_options_description args_pos;
+        args_pos.add("input-files", -1);
         
-        bpo::variables_map vm;
+        bpo::variables_map args_vm;
         store(bpo::command_line_parser(argc, argv).
-              options(cmdline_options).positional(p).run(), vm);
-        notify(vm);
+              options(cmdline_options).positional(args_pos).run(), args_vm);
+        notify(args_vm);
         
-        if (vm.count("help")) {
+        if (args_vm.count("help") != 0) {
             std::cout << "Usage: ./hdf2tsv input-files\n";
             std::cout << "Converts HDF5 files to tab separated values (TSV) files.\n";
             std::cout << "Dataset path needs to be /tags/block0_values (compatible with python pandas).\n";
@@ -40,8 +40,8 @@ int main(int argc, char **argv) {
             return 0;
         }
 
-        if (vm.count("input-files")) {
-            fnames = vm["input-files"].as< std::vector<std::string> >();
+        if (args_vm.count("input-files") != 0) {
+            fnames = args_vm["input-files"].as< std::vector<std::string> >();
         } else {
             std::cout << "no input files specified.\n";
             return 1;
@@ -60,13 +60,13 @@ int main(int argc, char **argv) {
     /*
      * process
      */
-    for (auto fn: fnames) {
+    for (const auto &fname: fnames) {
         auto starttime = std::chrono::high_resolution_clock::now();
-        std::string fn_tsv = fn;
-        stringreplace(fn_tsv, std::filesystem::path(fn).extension(), ".txt");
-        std::cout << fn << "\treading..." << std::flush;
+        std::string fn_tsv = fname;
+        stringreplace(fn_tsv, std::filesystem::path(fname).extension(), ".txt");
+        std::cout << fname << "\treading..." << std::flush;
         std::vector<long long> data;
-        readHDF5tags(fn, data);
+        readHDF5tags(fname, data);
         std::cout << "ok\twriting..." << std::flush;
         lltoTSV(fn_tsv, data);
         auto endtime = std::chrono::high_resolution_clock::now();

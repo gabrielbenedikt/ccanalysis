@@ -1,24 +1,24 @@
-#ifndef TOOLS_H
-#define TOOLS_H
+#pragma once
 
 #include <string>
 #include <vector>
 #include <iostream>
 #include <regex>
 
-bool stringreplace(std::string& str, const std::string& from, const std::string& to);
-std::vector<std::vector<uint16_t>> parse_patterns(const std::string instring);
+bool stringreplace(std::string& str, const std::string& from, const std::string& with);
+std::vector<std::vector<uint16_t>> parse_patterns(const std::string &instring);
 
 /********************************************************************************
 *** print elements of vector
 */
 template<typename T>
 void print_vector(const std::vector<T> v) {
+    std::cout << "[";
     for (T e : v) {
         if (e != v.back()) {
             std::cout << e << ", ";
         } else {
-            std::cout << e << std::endl;
+            std::cout << e << "]" << std::endl;
         }
     }
 }
@@ -55,16 +55,18 @@ std::vector<T> unique(const std::vector<T> v) {
 template<class T, typename std::enable_if<std::is_floating_point<T>::value>::type...>
 std::vector<T> arange(const T start, const T stop, const T step) {
     std::vector<T> values;
-    for (T value = start; value < stop; value += step)
+    for (T value = start; value < stop; value += step) {
         values.emplace_back(value);
+    }
     return values;
 }
 
 template<class T, typename std::enable_if<std::is_integral<T>::value>::type...>
 std::vector<T> arange(const T start, const T stop, const T step) {
     std::vector<T> values;
-    for (T value = start; value < stop; value += step)
+    for (T value = start; value < stop; value += step) {
         values.emplace_back(value);
+    }
     return values;
 }
 
@@ -75,10 +77,12 @@ T roundto(const T num, const T to)
     if (to == 0) {
         return num;
     }
+    
     T r = abs(num) % to;
     if (r == 0) {
         return num;
     }
+    
     if (num < 0) {
         if (2*r > to) {
             return num + r - to;
@@ -94,4 +98,3 @@ T roundto(const T num, const T to)
     }
 }
 
-#endif //TOOLS_H

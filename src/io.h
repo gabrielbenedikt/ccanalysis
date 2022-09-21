@@ -1,11 +1,10 @@
-#ifndef IO_H
-#define IO_H
+#pragma once
 
 #include <algorithm>
 #include <charconv>
 #include <iostream>
 #include <string>
-#include <string.h>
+//#include <string.h>
 #include <vector>
 #include <sstream>
 #include <fstream>
@@ -32,6 +31,7 @@
 #include <capnp/serialize.h>
 #include <kj/std/iostream.h>
 
+#define CAPNP_TRAVERSAL_LIMIT 1.9 * 1024 * 1024 * 1024
 enum HDF5_COMP_ALG {
     HDF5_COMP_ALG_ZLIB = 0,
     HDF5_COMP_ALG_SZIP = 1,
@@ -41,15 +41,12 @@ enum HDF5_COMP_ALG {
 
 bool fileExists(const std::string& fn);
 
-void readTSVtags(const std::string fn, std::vector<long long> &result);
-void readHDF5tags(const std::string fn, std::vector<long long> &result);
-void readcapnptags(const std::string fn, std::vector<long long> &result);
+void readTSVtags(const std::string &fn, std::vector<long long> &result);
+void readHDF5tags(const std::string &fn, std::vector<long long> &result);
+void readcapnptags(const std::string &fn, std::vector<long long> &result);
 
-void lltoTSV(const std::string fn, const std::vector<long long> &data);
-void writeHDFtags(const std::string fn, const std::vector<long long> &r, const uint8_t compression_alg=HDF5_COMP_ALG_ZLIB, const uint8_t compression_level=5);
-void writeHDFtagsC(const std::string fn, const std::vector<long long> &r, const uint8_t compression_alg=HDF5_COMP_ALG_ZLIB, const uint8_t compression_level=5);
-void writecapnptags(std::string fname, std::vector<long long> data, bool compress=true, const uint8_t compression_level=3);
+void lltoTSV(const std::string &fn, const std::vector<long long> &data);
+void writeHDFtags(const std::string &fn, const std::vector<long long> &r, const uint8_t compression_alg=HDF5_COMP_ALG_ZLIB, const uint8_t compression_level=5);
+void writecapnptags(std::string &fn, std::vector<long long> data, const bool compress=true, const uint8_t compression_level=3);
 
-std::vector<std::string> get_new_tagfiles(const std::string rawext, const std::string analyzed_ext="", const std::vector<std::string> excludes = {});
-
-#endif // IO_H
+std::vector<std::string> get_new_tagfiles(const std::string &raw_ext, const std::string &analyzed_ext="", const std::vector<std::string> &excludes = {});

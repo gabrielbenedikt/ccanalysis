@@ -74,3 +74,9 @@ ccanalysis
 *swp*
 NOTES
 
+#
+# LSP
+#
+compile_commands.json
+.clangd
+.cache

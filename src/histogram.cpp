@@ -4,8 +4,8 @@ namespace bpo = boost::program_options;
 
 int main(int argc, char **argv)
 {   
-    double ETA = 0;
-    double SPENT_TIME = 0;
+    uint32_t ETA = 0;
+    uint32_t SPENT_TIME = 0;
     
     Config cfg = read_config();
 
@@ -22,23 +22,23 @@ int main(int argc, char **argv)
             ;
         bpo::options_description cmdline_options;
         cmdline_options.add(args);
-        bpo::positional_options_description p;
-        p.add("input-files", -1);
+        bpo::positional_options_description args_pos;
+        args_pos.add("input-files", -1);
         
-        bpo::variables_map vm;
+        bpo::variables_map args_vm;
         store(bpo::command_line_parser(argc, argv).
-              options(cmdline_options).positional(p).run(), vm);
-        notify(vm);
+              options(cmdline_options).positional(args_pos).run(), args_vm);
+        notify(args_vm);
         
-        if (vm.count("help")) {
+        if (args_vm.count("help") != 0) {
             std::cout << "Usage: ./histogram  input-files\n";
             std::cout << "creates histograms from tagfiles.\n";
             std::cout << args << "\n";
             return 0;
         }
 
-        if (vm.count("input-files")) {
-            newtagfiles = vm["input-files"].as< std::vector<std::string> >();
+        if (args_vm.count("input-files") != 0) {
+            newtagfiles = args_vm["input-files"].as< std::vector<std::string> >();
         } else {
             std::cout << "no input files specified.\n";
             return 1;
@@ -124,7 +124,7 @@ int main(int argc, char **argv)
         */
         std::vector<long long> offsets = arange<long long>(cfg.HIST_START,cfg.HIST_STOP,cfg.HIST_STEP);
         std::vector<histogram_onepattern> histvec = {};
-        for (auto p : cfg.patterns) {
+        for (const auto &p : cfg.patterns) {
             histogram_onepattern hist = histogram(&tags_per_channel, &channels, &offsets, p, cfg.HIST_STEP);
             histvec.push_back(hist);
         }
@@ -150,21 +150,21 @@ int main(int argc, char **argv)
 /********************************************************************************
 *** separate tag vectors
 */
-void separate_tags_per_channels(const std::vector<long long> &tags, std::vector<std::vector<long long>>& tags_per_channel, const std::vector<uint16_t> channels, const Config& cfg) {
+void separate_tags_per_channels(const std::vector<long long> &tags, std::vector<std::vector<long long>>& tags_per_channel, const std::vector<uint16_t> &channels, const Config& cfg) {
     for (size_t i = 0; i<channels.size(); ++i) {
         tags_per_channel.emplace_back(std::vector<long long>());
     }
     
-    long long numtags = tags.size();
-    long long maxtag = numtags;
+    uint64_t numtags = tags.size();
+    uint64_t maxtag = numtags;
     if (cfg.TRUNCATE_S > 0) {
         long long firsttag = tags[1];
         long long lasttag = 0;
-        for (long long i=2; i<numtags; i+=2) {
+        for (uint64_t i=2; i<numtags; i+=2) {
             lasttag = tags[i+1];
             //some tags are zero. this breaks the comparison
             if (lasttag!=0) {
-                if ((lasttag-firsttag)*cfg.CS*pow(10,9)>cfg.TRUNCATE_S) {
+                if ((lasttag-firsttag)*cfg.CS*S_TO_NS>cfg.TRUNCATE_S) {
                     maxtag = i;
                     break;
                 }
@@ -172,8 +172,8 @@ void separate_tags_per_channels(const std::vector<long long> &tags, std::vector<
         }
     }
 
-    long long currtag;
-    for (long long i=0; i<maxtag; i+=2) {
+    long long currtag = 0;
+    for (uint64_t i=0; i<maxtag; i+=2) {
         currtag = tags[i+1];
         //some tags are zero. this breaks stuff. exclude them. effing tagger.
         if (currtag!=0) {
@@ -202,7 +202,7 @@ void separate_tags_per_channels(const std::vector<long long> &tags, std::vector<
         /* tagjump */
         // find discontinuity
         auto is_neg = [](long long x) { return ( x < 0 ); };
-        long long diff = pow(2,42);                                    /////////////////////long long diff = *prev(it) - *it;
+        const long long diff = 1LL<<42;                                   /////////////////////long long diff = *prev(it) - *it;
         for (std::vector<long long> v: tags_per_channel) {
             auto it = std::ranges::find_if(v, is_neg);
         
@@ -210,7 +210,7 @@ void separate_tags_per_channels(const std::vector<long long> &tags, std::vector<
             // by taking this difference, the first tag after the jump will be a 'double click'.
             // Better: find out range of tags and add this
             
-            std::transform(it, v.end(), it, [&diff](long long x) {return x+diff; } ); 
+            std::transform(it, v.end(), it, [](long long x) {return x+diff; } ); 
         }
         
     } // else same sign, thus no tag jump
@@ -219,8 +219,11 @@ void separate_tags_per_channels(const std::vector<long long> &tags, std::vector<
 /********************************************************************************
 *** find coincidences - set inersect
 */
-histogram_onepattern histogram(const std::vector<std::vector<long long>>* tags_per_channel, const std::vector<uint16_t>* channels, const std::vector<long long>* offsets, const std::vector<uint16_t> pattern, const long long wnd) {
+histogram_onepattern histogram(const std::vector<std::vector<long long>>* tags_per_channel, const std::vector<uint16_t>* channels, const std::vector<long long>* offsets, const std::vector<uint16_t>& pattern, const long long &wnd) {
     std::vector<long long> tags_trigger = tags_per_channel->at(std::find(channels->begin(), channels->end(), pattern[0])-channels->begin());
+    //size_t trigger_idx = std::find(channels->begin(), channels->end(), pattern[0])-channels->begin();
+    //auto &tags_trigger = tags_per_channel[trigger_idx];
+    
     std::vector<long long> tags_idler = tags_per_channel->at(std::find(channels->begin(), channels->end(), pattern[1])-channels->begin());
     std::ranges::for_each(tags_trigger.begin(), tags_trigger.end(), [&wnd](long long &tt) { tt=roundto(tt, wnd); });
 
@@ -254,17 +257,17 @@ histogram_onepattern histogram(const std::vector<std::vector<long long>>* tags_p
 }
 
 void histograms_to_struct(const std::vector<histogram_onepattern> *pts, histograms *hs, Config& cfg) {
-    for (auto h: *pts) {
+    for (const auto &h: *pts) {
         hs->offsets.emplace_back(h.offsets);
         hs->cc.emplace_back(h.cc);
         hs->cc_tags.emplace_back(h.cc_tags);
         hs->pattern.emplace_back(h.pattern);
         hs->meastime.emplace_back(h.meastime);
     }
-    hs->resolution = cfg.HIST_STEP;
+    hs->resolution = cfg.CS;
 }
 
-int histstruct_protobuf_todisk(const histograms* data, const std::string fname) {
+int histstruct_protobuf_todisk(const histograms* data, const std::string &fname) {
     std::cout << "writing to file " << fname << std::endl;
     histogramset::histograms hdat;
     for (size_t i = 0; i<data->meastime.size(); ++i) {
@@ -274,21 +277,30 @@ int histstruct_protobuf_todisk(const histograms* data, const std::string fname) 
         histogramset::histograms::u32arr* pattern = hdat.add_pattern();
         histogramset::histograms::repi64arr* cc_tags_vec = hdat.add_cc_tags();
         
-        for (size_t j = 0; j<data->offsets[i].size(); ++j) {
-            offsets->add_arr(data->offsets[i][j]);
+        
+        for (auto o: data->offsets[i]) {
+            offsets->add_arr(o);
         }
-        for (size_t j = 0; j<data->cc[i].size(); ++j) {
-            cc->add_arr(data->cc[i][j]);
+        for (auto c: data->cc[i]) {
+            cc->add_arr(c);
         }
-        for (size_t j = 0; j<data->pattern[i].size(); ++j) {
-            pattern->add_arr(data->pattern[i][j]);
+        for (auto p: data->pattern[i]) {
+            pattern->add_arr(p);
         }
+        for (const auto &tarr: data->cc_tags[i]) {
+            histogramset::histograms::i64arr* cc_tags = cc_tags_vec->add_arr();
+            for (auto t: tarr) {
+                    cc_tags->add_arr(t);
+            }
+        }
+        /*
         for (size_t j = 0; j<data->cc_tags[i].size(); ++j) {
             histogramset::histograms::i64arr* cc_tags = cc_tags_vec->add_arr();
             for (size_t k = 0; k<data->cc_tags[i][j].size(); ++k) {
                     cc_tags->add_arr(data->cc_tags[i][j][k]);
             }
         }
+        */
     }
     
     std::fstream ofs(fname, std::ios::out | std::ios::trunc | std::ios::binary);
@@ -320,7 +332,7 @@ std::vector<std::string> get_new_tagfiles(const Config& cfg) {
     }
             
             
-    for ( auto & p : std::filesystem::directory_iterator(path) ) {
+    for ( const auto & p : std::filesystem::directory_iterator(path) ) {
         if ( p.path().extension() == ".h5" ) {
             if (p.path().filename() != "tomos.h5") {
                 alltagfiles.emplace_back(p.path());
@@ -333,30 +345,30 @@ std::vector<std::string> get_new_tagfiles(const Config& cfg) {
     }
     
     newtagfiles = alltagfiles;
-    if ( analyzedfiles.size() == 0 ) {
+    if ( analyzedfiles.empty() ) {
         return alltagfiles;
-    } else {
-        auto it = newtagfiles.begin();
-        while (it != newtagfiles.end() ) {
-            bool found = false;
-            std::string h5string = *it;
-            stringreplace(h5string, ".h5","");
-            for ( auto p : analyzedfiles ) {
-                std::string tmpstring = p;
-                stringreplace(tmpstring,subtruncstr+"_ccs.pbdat","");
-                
-                if (( tmpstring == h5string)) {
-                    it=newtagfiles.erase(it);
-                    found = true;
-                }
-            }
-            if (!found) {
-                ++it;
+    }
+    
+    auto it = newtagfiles.begin();
+    while (it != newtagfiles.end() ) {
+        bool found = false;
+        std::string h5string = *it;
+        stringreplace(h5string, ".h5","");
+        for ( const auto &p : analyzedfiles ) {
+            std::string tmpstring = p;
+            stringreplace(tmpstring,subtruncstr+"_ccs.pbdat","");
+            
+            if (( tmpstring == h5string)) {
+                it=newtagfiles.erase(it);
+                found = true;
             }
         }
-        
-        return newtagfiles;
+        if (!found) {
+            ++it;
+        }
     }
+    
+    return newtagfiles;
 }
 
 /********************************************************************************
@@ -370,18 +382,19 @@ Config read_config() {
         while(getline(cfgf, line)){
             line.erase(remove_if(line.begin(), line.end(), ::isspace),
                                  line.end());
-            if(line[0] == '#' || line.empty())
+            if(line[0] == '#' || line.empty()) {
                 continue;
-            auto delimiterPos = line.find("=");
+            }
+            auto delimiterPos = line.find('=');
             auto name = line.substr(0, delimiterPos);
             auto value = line.substr(delimiterPos + 1);
             
             if (name == "hist_start") {
-                cfg.HIST_START = stod(value);
+                cfg.HIST_START = stoll(value);
             } else if (name == "hist_stop") {
-                cfg.HIST_STOP = stod(value);
+                cfg.HIST_STOP = stoll(value);
             } else if (name == "hist_step") {
-                cfg.HIST_STEP = stod(value);
+                cfg.HIST_STEP = stoll(value);
             } else if (name == "truncate") {
                 cfg.TRUNCATE_S = stoul(value);
             } else if (name == "patterns") {
@@ -407,7 +420,7 @@ Config read_config() {
     std::cout << "tag resolution: " << cfg.CS         << "ns\n";
     std::cout << "# threads     : " << cfg.NUM_THREADS<< "\n";
     std::cout << "patterns:     : " << std::endl;
-    for (auto e: cfg.patterns) {
+    for (const auto &e: cfg.patterns) {
         print_vector(e);
     }
     

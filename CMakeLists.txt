@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
    project(ccanalysis)
    
+   set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+   
    option(CLANG_TIDY "analyze code with clang-tidy (all checks enabled)" OFF)
    if(CLANG_TIDY)
       set(CMAKE_CXX_CLANG_TIDY clang-tidy; -checks=*;)

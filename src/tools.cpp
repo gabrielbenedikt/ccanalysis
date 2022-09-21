@@ -2,43 +2,44 @@
 /********************************************************************************
 *** find and replace in a string (find 1, NOT N)
 */
-bool stringreplace(std::string& str, const std::string& from, const std::string& to) {
+bool stringreplace(std::string& str, const std::string& from, const std::string& with) {
     size_t start_pos = str.find(from);
-    if(start_pos == std::string::npos)
+    if(start_pos == std::string::npos) {
         return false;
-    str.replace(start_pos, from.length(), to);
+    }
+    str.replace(start_pos, from.length(), with);
     return true;
 }
 
 /********************************************************************************
 *** parse string containing patternspatterns
 */
-std::vector<std::vector<uint16_t>> parse_patterns(const std::string instring) {
-    std::string s = instring;
-    if (!(s.starts_with("{{"))) {
-        std::cout << "pattern string malformatted: " << s << std::endl;
+std::vector<std::vector<uint16_t>> parse_patterns(const std::string &instring) {
+    std::string patstr = instring;
+    if (!(patstr.starts_with("{{"))) {
+        std::cout << "pattern string malformatted: " << patstr << std::endl;
     }
-    if (!(s.ends_with("}}"))) {
-        std::cout << "pattern string malformatted: " << s << std::endl;
+    if (!(patstr.ends_with("}}"))) {
+        std::cout << "pattern string malformatted: " << patstr << std::endl;
     }
     
-    s.erase(0,1);
-    s.erase(s.length()-1,1);
+    patstr.erase(0,1);
+    patstr.erase(patstr.length()-1,1);
     
     size_t vec_start_idx = 0;
     size_t vec_stop_idx = 0;
     std::vector<size_t> sep_idxs = {};
     size_t curr_sep_idx = 0;
     
-    std::string vector_string = "";
+    std::string vector_string;
     std::vector<uint16_t> pattern = {};
     std::vector<std::vector<uint16_t>> patterns = {};
-    std::string channelstr = "";
+    std::string channelstr;
     // separate patterns
-    while (vec_stop_idx < s.length()-1) {
-        vec_start_idx =  s.find("{", vec_start_idx);
-        vec_stop_idx = s.find("}", vec_start_idx);
-        vector_string = s.substr(vec_start_idx, vec_stop_idx-vec_start_idx+1);
+    while (vec_stop_idx < patstr.length()-1) {
+        vec_start_idx =  patstr.find('{', vec_start_idx);
+        vec_stop_idx = patstr.find('}', vec_start_idx);
+        vector_string = patstr.substr(vec_start_idx, vec_stop_idx-vec_start_idx+1);
         
         sep_idxs = {};
         sep_idxs.push_back(vector_string.find('{'));
