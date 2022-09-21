@@ -18,7 +18,8 @@
 #include "io.h"
 #include "histogramset.pb.h"
 
-#define S_TO_NS 1000000000
+#define SEC_TO_NS 1000000000
+#define MIN_TO_SEC 60
 
 // CONFIG VALUES
 struct Config {

@@ -140,7 +140,7 @@ int main(int argc, char **argv)
         SPENT_TIME += duration; 
         ETA = (SPENT_TIME/nanalyzed)*(newtagfiles.size()-nanalyzed);
         
-        std::cout << "analysis T / avg T / ETA: " << duration << "s / " << SPENT_TIME/(i+1) <<"s / " << ETA/(60*omp_get_num_threads()) <<"m" << std::endl;
+        std::cout << "analysis T / avg T / ETA: " << duration << "s / " << SPENT_TIME/(i+1) <<"s / " << ETA/(MIN_TO_SEC*omp_get_num_threads()) <<"m" << std::endl;
     }
     
     return 0;
@@ -164,7 +164,7 @@ void separate_tags_per_channels(const std::vector<long long> &tags, std::vector<
             lasttag = tags[i+1];
             //some tags are zero. this breaks the comparison
             if (lasttag!=0) {
-                if ((lasttag-firsttag)*cfg.CS*S_TO_NS>cfg.TRUNCATE_S) {
+                if ((lasttag-firsttag)*cfg.CS*SEC_TO_NS>cfg.TRUNCATE_S) {
                     maxtag = i;
                     break;
                 }
