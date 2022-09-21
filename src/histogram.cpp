@@ -125,7 +125,7 @@ int main(int argc, char **argv)
         std::vector<long long> offsets = arange<long long>(cfg.HIST_START,cfg.HIST_STOP,cfg.HIST_STEP);
         std::vector<histogram_onepattern> histvec = {};
         for (const auto &p : cfg.patterns) {
-            histogram_onepattern hist = histogram(&tags_per_channel, &channels, &offsets, p, cfg.HIST_STEP);
+            histogram_onepattern hist = histogram(tags_per_channel, channels, offsets, p, cfg.HIST_STEP);
             histvec.push_back(hist);
         }
         histograms allhistograms;
@@ -219,26 +219,26 @@ void separate_tags_per_channels(const std::vector<long long> &tags, std::vector<
 /********************************************************************************
 *** find coincidences - set inersect
 */
-histogram_onepattern histogram(const std::vector<std::vector<long long>>* tags_per_channel, const std::vector<uint16_t>* channels, const std::vector<long long>* offsets, const std::vector<uint16_t>& pattern, const long long &wnd) {
-    std::vector<long long> tags_trigger = tags_per_channel->at(std::find(channels->begin(), channels->end(), pattern[0])-channels->begin());
+histogram_onepattern histogram(const std::vector<std::vector<long long>> &tags_per_channel, const std::vector<uint16_t> &channels, const std::vector<long long> &offsets, const std::vector<uint16_t> &pattern, const long long &wnd) {
+    std::vector<long long> tags_trigger = tags_per_channel.at(std::find(channels.begin(), channels.end(), pattern[0])-channels.begin());
     //size_t trigger_idx = std::find(channels->begin(), channels->end(), pattern[0])-channels->begin();
-    //auto &tags_trigger = tags_per_channel[trigger_idx];
+    //auto &tags_trigger = tags_per_channel->at(trigger_idx);
     
-    std::vector<long long> tags_idler = tags_per_channel->at(std::find(channels->begin(), channels->end(), pattern[1])-channels->begin());
+    std::vector<long long> tags_idler = tags_per_channel.at(std::find(channels.begin(), channels.end(), pattern[1])-channels.begin());
     std::ranges::for_each(tags_trigger.begin(), tags_trigger.end(), [&wnd](long long &tt) { tt=roundto(tt, wnd); });
 
-    size_t offset_len = offsets->size();
+    size_t offset_len = offsets.size();
     
     histogram_onepattern histogram = {};
     histogram.pattern = pattern;
     histogram.meastime = tags_trigger.back()-tags_trigger.front();
     histogram.cc.resize(offset_len);
     histogram.cc_tags.resize(offset_len);
-    histogram.offsets = *offsets;
+    histogram.offsets = offsets;
     
     #pragma omp parallel for
     for(uint i=0; i<offset_len; ++i) {
-        long long os = offsets->at(i);
+        long long os = offsets.at(i);
         
         // H
         std::vector<long long> tmptags = tags_idler;

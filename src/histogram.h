@@ -51,7 +51,7 @@ struct histograms {
 
 void separate_tags_per_channels(const std::vector<long long> &tags, std::vector<std::vector<long long>>& tags_per_channel, const std::vector<uint16_t> &channels, const Config& cfg);
 
-histogram_onepattern histogram(const std::vector<std::vector<long long>>* tags_per_channel, const std::vector<uint16_t>* channels, const std::vector<long long>* offsets, const std::vector<uint16_t> &pattern, const long long &wnd);
+histogram_onepattern histogram(const std::vector<std::vector<long long>> &tags_per_channel, const std::vector<uint16_t> &channels, const std::vector<long long> &offsets, const std::vector<uint16_t> &pattern, const long long &wnd);
 
 void histograms_to_struct(const std::vector<histogram_onepattern> *pts, histograms *hs, Config& cfg);
 int histstruct_protobuf_todisk(const histograms* data, const std::string &fname);
