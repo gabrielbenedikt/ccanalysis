@@ -75,7 +75,7 @@ int main(int argc, char **argv)
             std::string truncstr = std::string(3 - std::to_string(cfg.TRUNCATE_S).length(), '0') + std::to_string(cfg.TRUNCATE_S);
             newext = "_trunc"+ truncstr +"_ccs.pbdat";
         } else {
-            newext = "_trunc000_ccs.pbdat";
+            newext = ".pbdat";
         }
         stringreplace(savefname,std::filesystem::path(savefname).extension(), newext);
 
