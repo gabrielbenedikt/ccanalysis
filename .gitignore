@@ -60,6 +60,7 @@ histograms*
 __pycache__/
 release/
 debug/
+build/
 inttime/
 config/
 pgo/
