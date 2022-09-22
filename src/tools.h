@@ -1,12 +1,28 @@
 #pragma once
 
 #include <string>
-#include <vector>
+#include <sstream>
 #include <iostream>
+#include <vector>
 #include <regex>
+#include <iomanip>
 
 bool stringreplace(std::string& str, const std::string& from, const std::string& with);
 std::vector<std::vector<uint16_t>> parse_patterns(const std::string &instring);
+
+/********************************************************************************
+*** create string of integer, with fixed width
+*/
+template<typename T, typename U>
+requires std::integral<T> && std::unsigned_integral<U>
+std::string fixed_width_intstr(const T number, const U width){
+    std::ostringstream ss;
+    if (number < 0) {
+        ss << '-';
+    }
+    ss << std::setfill('0') << std::setw(width) << (number < 0 ? -number : number);
+    return ss.str();
+}
 
 /********************************************************************************
 *** print elements of vector
@@ -97,4 +113,3 @@ T roundto(const T num, const T to)
         }
     }
 }
-

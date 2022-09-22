@@ -64,4 +64,3 @@ std::vector<std::vector<uint16_t>> parse_patterns(const std::string &instring) {
     
     return patterns;
 }
-
