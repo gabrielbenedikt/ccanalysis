@@ -18,7 +18,8 @@ int main(int argc, char **argv)
     try {
         bpo::options_description args("Arguments");
         args.add_options()
-            ("input-files", bpo::value<std::vector<std::string>>(), "TSV files to convert")
+            ("help,h", "prints this message")
+            ("input-files", bpo::value<std::vector<std::string>>(), "Tag files to convert")
             ;
         bpo::options_description cmdline_options;
         cmdline_options.add(args);
