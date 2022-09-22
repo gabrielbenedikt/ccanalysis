@@ -246,7 +246,7 @@ histogram_onepattern histogram(const std::vector<std::vector<long long>> &tags_p
         std::ranges::for_each(tmptags.begin(), tmptags.end(), [&os, &wnd](long long &ht) { ht=roundto(ht-os,wnd); });
         std::vector<long long> cc_tags = {};
         cc_tags.reserve(4096);
-        std::set_intersection(tags_trigger.begin(), tags_trigger.end(),
+        std::ranges::set_intersection(tags_trigger.begin(), tags_trigger.end(),
                          tmptags.begin(), tmptags.end(),
                          std::back_inserter(cc_tags));
         
