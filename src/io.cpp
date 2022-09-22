@@ -9,6 +9,26 @@ bool fileExists(const std::string& fn){
 }
 
 /********************************************************************************
+*** count number of lines in text file
+*/
+uint64_t get_num_lines(const std::string &fn) {
+    uint64_t numlines = 0;
+    
+    // get number of tags = linecount //buffered
+    const int bufsize = READ_BUF_SIZE;
+    std::ifstream ifs(fn);
+    
+    do {
+        std::vector<char> buf( bufsize );
+        ifs.read( buf.data(), buf.size() );
+        numlines += std::count_if(buf.begin(), buf.end(), [](char i){return i == '\n';});
+    } while (ifs.gcount() != 0);
+    ifs.close();
+    
+    return numlines;
+}
+
+/********************************************************************************
 *** read capnp tag file
 */
 void readcapnptags(const std::string &fn, std::vector<long long> &result){
@@ -133,11 +153,7 @@ void writecapnptags(std::string &fn, std::vector<long long> data, const bool com
 *** read tsv tag file
 */
 void readTSVtags(const std::string &fn, std::vector<long long> &result) {
-    if (FILE *f = fopen(fn.c_str(), "r")) {
-        (void)fseek(f, 0, SEEK_END);
-        result.reserve(2*ftell(f));
-        (void)fclose(f);
-    }
+    result.reserve(2*get_num_lines(fn));
     std::ifstream f(fn);
     std::stringstream ss;
     std::string s;
