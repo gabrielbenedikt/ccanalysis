@@ -64,3 +64,10 @@ std::vector<std::vector<uint16_t>> parse_patterns(const std::string &instring) {
     
     return patterns;
 }
+
+std::string toLower(const std::string &ins) {
+    std::string os = ins;
+    std::transform(ins.begin(), ins.end(), os.begin(), [](unsigned char c){ return std::tolower(c); });
+    
+    return os;
+}
