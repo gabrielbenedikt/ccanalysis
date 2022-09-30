@@ -16,6 +16,7 @@
 
 #include "tools.h"
 #include "io.h"
+#include "io_protobuf.h"
 #include "histogramset.pb.h"
 
 #define SEC_TO_NS 1000000000
@@ -40,21 +41,11 @@ struct histogram_onepattern {
     double meastime;
 };
 
-struct histograms {
-    std::vector<std::vector<long long>> offsets;
-    std::vector<std::vector<uint32_t>> cc;
-    std::vector<std::vector<std::vector<long long>>> cc_tags;
-    std::vector<std::vector<uint16_t>> pattern;
-    std::vector<double> meastime;
-    double resolution;
-};
-
 void separate_tags_per_channels(const std::vector<long long> &tags, std::vector<std::vector<long long>>& tags_per_channel, const std::vector<uint16_t> &channels, const Config& cfg);
 
 histogram_onepattern histogram(const std::vector<std::vector<long long>> &tags_per_channel, const std::vector<uint16_t> &channels, const std::vector<long long> &offsets, const std::vector<uint16_t> &pattern, const long long &wnd);
 
 void histograms_to_struct(const std::vector<histogram_onepattern> *pts, histograms *hs, Config& cfg);
-int histstruct_protobuf_todisk(const histograms* data, const std::string &fname);
 
 std::vector<std::string> get_new_tagfiles(const Config& cfg);
 Config read_config();
