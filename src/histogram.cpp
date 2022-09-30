@@ -132,7 +132,7 @@ int main(int argc, char **argv)
         histograms allhistograms;
         histograms_to_struct(&histvec, &allhistograms, cfg);
         // save analysis to disk
-        histstruct_protobuf_todisk(&allhistograms, savefname);
+        ser_histogram_protobuf(&allhistograms, savefname);
         
         // how much time did analysis take? give eta for all files
         auto endtime = std::chrono::high_resolution_clock::now();
@@ -266,52 +266,6 @@ void histograms_to_struct(const std::vector<histogram_onepattern> *pts, histogra
         hs->meastime.emplace_back(h.meastime);
     }
     hs->resolution = cfg.CS;
-}
-
-int histstruct_protobuf_todisk(const histograms* data, const std::string &fname) {
-    std::cout << "writing to file " << fname << std::endl;
-    histogramset::histograms hdat;
-    for (size_t i = 0; i<data->meastime.size(); ++i) {
-        hdat.add_meastime(data->meastime[i]);
-        histogramset::histograms::i64arr* offsets = hdat.add_offsets();
-        histogramset::histograms::i64arr* cc = hdat.add_cc();
-        histogramset::histograms::u32arr* pattern = hdat.add_pattern();
-        histogramset::histograms::repi64arr* cc_tags_vec = hdat.add_cc_tags();
-        
-        
-        for (auto o: data->offsets[i]) {
-            offsets->add_arr(o);
-        }
-        for (auto c: data->cc[i]) {
-            cc->add_arr(c);
-        }
-        for (auto p: data->pattern[i]) {
-            pattern->add_arr(p);
-        }
-        for (const auto &tarr: data->cc_tags[i]) {
-            histogramset::histograms::i64arr* cc_tags = cc_tags_vec->add_arr();
-            for (auto t: tarr) {
-                    cc_tags->add_arr(t);
-            }
-        }
-        /*
-        for (size_t j = 0; j<data->cc_tags[i].size(); ++j) {
-            histogramset::histograms::i64arr* cc_tags = cc_tags_vec->add_arr();
-            for (size_t k = 0; k<data->cc_tags[i][j].size(); ++k) {
-                    cc_tags->add_arr(data->cc_tags[i][j][k]);
-            }
-        }
-        */
-    }
-    
-    std::fstream ofs(fname, std::ios::out | std::ios::trunc | std::ios::binary);
-    if (!hdat.SerializeToOstream(&ofs)) {
-        std::cerr << "Failed to write." << std::endl;
-        return -1;
-    }
-    ofs.close();
-    
-    return 0;
 }
 
 
