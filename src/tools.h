@@ -6,10 +6,33 @@
 #include <vector>
 #include <regex>
 #include <iomanip>
+#include <numeric>
 
 bool stringreplace(std::string& str, const std::string& from, const std::string& with);
 std::vector<std::vector<uint16_t>> parse_patterns(const std::string &instring);
+std::string toLower(const std::string &ins);
 
+/********************************************************************************
+*** get index list that sorts a vector
+*/
+template <typename T>
+std::vector<size_t> get_sort_perm(const std::vector<T> &v) {
+  std::vector<size_t> idx(v.size());
+  std::iota(idx.begin(), idx.end(), 0);
+  std::sort(idx.begin(), idx.end(), [&v](size_t i, size_t j) {return v[i] < v[j];});
+  return idx;
+}
+
+/********************************************************************************
+*** reorder vector according to index list
+*/
+template <typename T>
+std::vector<T> vector_permute(const std::vector<T> &v, const std::vector<size_t> &idx) {
+    std::vector<T> sorted_vec(v.size());
+    std::transform(idx.begin(), idx.end(), sorted_vec.begin(), [&](size_t i){ return v[i]; });
+    return sorted_vec;
+}
+    
 /********************************************************************************
 *** create string of integer, with fixed width
 */
