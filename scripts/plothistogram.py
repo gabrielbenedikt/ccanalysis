@@ -4,14 +4,24 @@ import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-
+import sys
 import histogramset_pb2
 
 parser = argparse.ArgumentParser(description='Plot histograms of pbdats.')
 parser.add_argument('--save-plots', type=bool, nargs='?', const=True, default=False, help='save images of all histograms')
+parser.add_argument('--plot-window', type=float, nargs=2, default=[-1.0,-1.0], help='plot integration window.', required=False)
 args = parser.parse_args()
 
 print('save plots: ', args.save_plots)
+wnd = args.plot_window
+# check if values for window exist
+plot_window = True
+if (wnd[0] == -1) and (wnd[1] == -1):
+    plot_window = False
+if plot_window:
+    if (wnd[0] == -1) or (wnd[1] == -1):
+        print('please specify integration window for integration window')
+        sys.exit()
 
 DATAEXT = '.pbdat'
 
@@ -51,6 +61,11 @@ for fname in fnames:
         ax.plot(offsets[j], ccs[j], label=patlabel)
     ax.legend()
     ax.set_title(fname)
+
+    # plot window
+    if plot_window:
+        plt.axvspan(wnd[0], wnd[1], color='blue', alpha=0.3)
+
     if args.save_plots:
         if not os.path.exists('histograms'):
             os.makedirs('histograms')
