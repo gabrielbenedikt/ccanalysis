@@ -48,6 +48,7 @@ See scripts/plothistogram.py for example usage in python.
 - fmtlib
 
 ## build
+./mkproto  
 mkdir build  
 cd build  
 cmake ..  
